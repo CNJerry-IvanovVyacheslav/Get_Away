@@ -1,0 +1,9 @@
+<resources>
+    <dimen name="dimens_0dp">0dp</dimen>
+    <dimen name="dimens_54dp">54dp</dimen>
+
+    <dimen name="text_size_8">8sp</dimen>
+    <dimen name="text_size_35">35sp</dimen>
+    <dimen name="text_size_45">45sp</dimen>
+
+</resources>
