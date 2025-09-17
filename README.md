@@ -24,6 +24,7 @@
 This project demonstrates **Jetpack Compose for dynamic UI rendering, gesture handling**, and building **state-driven games** in a clean, maintainable architecture.
 
 **Future improvements**: animations, multiple levels, smarter enemy AI.
+
 (The game is inspired by the Wappo game and is made solely to explore a technology that is new to me)
 
 <img src="https://github.com/CNJerry-IvanovVyacheslav/Wappo_game/blob/master/photo_2025-09-17_12-29-48.jpg" width="200">    <img src="https://github.com/CNJerry-IvanovVyacheslav/Wappo_game/blob/master/photo_2025-09-17_12-29-48%20(2).jpg" width="200">
