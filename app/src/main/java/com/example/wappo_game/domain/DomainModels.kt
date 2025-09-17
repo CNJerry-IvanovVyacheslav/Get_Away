@@ -2,7 +2,7 @@ package com.example.wappo_game.domain
 
 import kotlin.math.abs
 
-data class Pos(val r:   Int, val c: Int) {
+data class Pos(val r: Int, val c: Int) {
     fun manhattan(other: Pos) = abs(r - other.r) + abs(c - other.c)
 }
 
@@ -27,33 +27,54 @@ data class GameState(
     val walls: Set<Pair<Pos, Pos>> = emptySet(),
     val enemyFrozenTurns: Int = 0,
     val turn: Turn = Turn.PLAYER,
-    val result: GameResult = GameResult.Ongoing
+    val result: GameResult = GameResult.Ongoing,
+    val playerMoves: Int = 0
 ) {
     fun tileAt(p: Pos): Tile? = tiles.find { it.pos == p }
     fun inBounds(p: Pos) = p.r in 0 until rows && p.c in 0 until cols
+
     fun isBlocked(a: Pos, b: Pos): Boolean = (a to b) in walls || (b to a) in walls
+
+    fun canMove(from: Pos, to: Pos): Boolean {
+        if (!inBounds(to)) return false
+        if (from.manhattan(to) != 1) return false
+        if (isBlocked(from, to)) return false
+        return true
+    }
 }
 
 fun createDefaultGameState(): GameState {
     val rows = 6
     val cols = 6
 
-    // all the cells are empty
     val tiles = List(rows * cols) { idx ->
         val r = idx / cols
         val c = idx % cols
         Tile(Pos(r, c), TileType.EMPTY)
     }.toMutableList()
 
-    // the exit is in the lower right corner
-    tiles[rows * cols - 1] = Tile(Pos(rows - 1, cols - 1), TileType.EXIT)
+    // list of traps
+    val traps = listOf(
+        Pos(0, 4),
+        Pos(3, 2),
+        Pos(4, 5)
+    )
 
-    // Pair of traps
-    tiles[10] = Tile(Pos(1, 4), TileType.TRAP)
-    tiles[20] = Tile(Pos(3, 2), TileType.TRAP)
+    // setting traps
+    traps.forEach { pos ->
+        val index = pos.r * cols + pos.c
+        tiles[index] = Tile(pos, TileType.TRAP)
+    }
 
+    // exit in the lower right corner
+    val exitPos = Pos(rows - 1, cols - 1)
+    val exitIndex = exitPos.r * cols + exitPos.c
+    tiles[exitIndex] = Tile(exitPos, TileType.EXIT)
+
+    // walls
     val walls = setOf(
         Pos(0, 0) to Pos(0, 1),
+        Pos(1, 0) to Pos(1, 1),
         Pos(2, 2) to Pos(3, 2),
         Pos(4, 4) to Pos(4, 5)
     )

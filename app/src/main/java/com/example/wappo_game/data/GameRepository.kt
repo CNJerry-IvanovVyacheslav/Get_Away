@@ -9,4 +9,5 @@ class InMemoryGameRepository(initial: GameState) {
     val state: StateFlow<GameState> = _state
 
     fun setState(next: GameState) { _state.value = next }
+    fun getState(): GameState = _state.value
 }

@@ -10,7 +10,6 @@ import com.example.wappo_game.presentation.GameViewModel
 
 class MainActivity : ComponentActivity() {
 
-    // ViewModel через делегат activity-ktx
     private val gameViewModel: GameViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -19,7 +18,6 @@ class MainActivity : ComponentActivity() {
         setContent {
             MaterialTheme {
                 Surface {
-                    // Передаем VM в наш экран
                     GameScreen(vm = gameViewModel)
                 }
             }
