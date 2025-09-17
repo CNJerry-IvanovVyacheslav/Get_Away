@@ -20,7 +20,7 @@ class GameViewModel : ViewModel() {
     val state: StateFlow<GameState> = repo.state
 
     private fun tryMovePlayer(to: Pos) {
-        val cur = repo.state.value
+        val cur = repo.getState()
         val afterPlayer = movePlayer(cur, to)
         repo.setState(afterPlayer)
 

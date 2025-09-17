@@ -1,39 +1,25 @@
 package com.example.wappo_game.ui
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.pointer.consumeAllChanges
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.min
 import androidx.compose.ui.unit.sp
-import com.example.wappo_game.domain.GameState
-import com.example.wappo_game.domain.Pos
-import com.example.wappo_game.domain.TileType
+import com.example.wappo_game.domain.*
 import com.example.wappo_game.presentation.GameViewModel
 import kotlin.math.abs
 
@@ -43,13 +29,14 @@ fun GameScreen(vm: GameViewModel) {
 
     Column(
         modifier = Modifier
-            .fillMaxSize()
-            .padding(12.dp),
+            .fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            "Turn: ${state.turn}  Result: ${state.result::class.simpleName}",
-            modifier = Modifier.padding(8.dp)
+            "Turn: ${state.playerMoves}  Result: ${state.result::class.simpleName}",
+            modifier = Modifier
+                .padding(vertical = 16.dp),
+            fontSize = 16.sp
         )
 
         var totalDx by remember { mutableFloatStateOf(0f) }
@@ -57,6 +44,9 @@ fun GameScreen(vm: GameViewModel) {
 
         Box(
             modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+                .padding(8.dp)
                 .pointerInput(Unit) {
                     detectDragGestures(
                         onDragStart = {
@@ -66,7 +56,7 @@ fun GameScreen(vm: GameViewModel) {
                         onDrag = { change, dragAmount ->
                             totalDx += dragAmount.x
                             totalDy += dragAmount.y
-                            change.consume()
+                            change.consumeAllChanges()
                         },
                         onDragEnd = {
                             if (abs(totalDx) > abs(totalDy)) {
@@ -76,85 +66,103 @@ fun GameScreen(vm: GameViewModel) {
                             }
                         }
                     )
-                }
+                },
+            contentAlignment = Alignment.Center
         ) {
-            BoardView(state = state)
+            BoardView(state = state, modifier = Modifier.fillMaxSize())
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
-        Button(onClick = { vm.resetGame() }) { Text("Reset") }
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 24.dp),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Button(onClick = { vm.resetGame() }) { Text("Reset") }
+        }
     }
 }
 
+@SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
-fun BoardView(state: GameState) {
-    Box {
-        Column {
-            for (r in 0 until state.rows) {
-                Row {
-                    for (c in 0 until state.cols) {
-                        val pos = Pos(r, c)
-                        val tile = state.tileAt(pos)!!
-                        val isPlayer = state.playerPos == pos
-                        val isEnemy = state.enemyPos == pos
-                        val bg = when {
-                            isPlayer -> Color.Green
-                            isEnemy -> Color.Red
-                            tile.type == TileType.TRAP -> Color.Magenta
-                            tile.type == TileType.EXIT -> Color.Yellow
-                            else -> Color(0xFFEEEEEE)
-                        }
-                        Box(
-                            modifier = Modifier
-                                .size(44.dp)
-                                .padding(1.dp)
-                                .background(bg, RoundedCornerShape(6.dp)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            when {
-                                isPlayer -> Text("P", fontSize = 18.sp, textAlign = TextAlign.Center)
-                                isEnemy -> Text("E", fontSize = 18.sp, textAlign = TextAlign.Center)
-                                tile.type == TileType.TRAP -> Text("T", fontSize = 12.sp)
-                                tile.type == TileType.EXIT -> Text("EXIT", fontSize = 10.sp)
-                                else -> {}
+fun BoardView(state: GameState, modifier: Modifier = Modifier) {
+    BoxWithConstraints(
+        modifier = modifier,
+        contentAlignment = Alignment.Center
+    ) {
+        val boardSize = min(maxWidth, maxHeight)
+
+        val cellSizeDp = boardSize / state.cols
+
+        Box(modifier = Modifier.size(boardSize)) {
+            // Grid: rows x cols
+            Column(modifier = Modifier.fillMaxSize()) {
+                for (r in 0 until state.rows) {
+                    Row(modifier = Modifier.height(cellSizeDp)) {
+                        for (c in 0 until state.cols) {
+                            val pos = Pos(r, c)
+                            val tile = state.tileAt(pos)!!
+                            val isPlayer = state.playerPos == pos
+                            val isEnemy = state.enemyPos == pos
+                            val bg = when {
+                                isPlayer -> Color(0xFF4CAF50) // green
+                                isEnemy -> Color(0xFFF44336)  // red
+                                tile.type == TileType.TRAP -> Color(0xFF9C27B0) // magenta-ish
+                                tile.type == TileType.EXIT -> Color(0xFFFFEB3B) // yellow
+                                else -> Color(0xFFEEEEEE)
+                            }
+
+                            Box(
+                                modifier = Modifier
+                                    .size(cellSizeDp)
+                                    .padding(1.dp)
+                                    .background(bg, RoundedCornerShape(6.dp)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                when {
+                                    isPlayer -> Text("P", fontSize = (cellSizeDp / 3).value.sp, textAlign = TextAlign.Center)
+                                    isEnemy -> Text("E", fontSize = (cellSizeDp / 3).value.sp, textAlign = TextAlign.Center)
+                                    tile.type == TileType.TRAP -> Text("T", fontSize = (cellSizeDp / 3).value.sp)
+                                    tile.type == TileType.EXIT -> Text("EXIT", fontSize = (cellSizeDp / 6).value.sp)
+                                    else -> {}
+                                }
                             }
                         }
                     }
                 }
             }
-        }
 
-        // Отрисуем стены поверх клеток
-        Canvas(
-            modifier = Modifier
-                .matchParentSize()
-                .padding(1.dp)
-        ) {
-            val cellSize = size.width / state.cols
-            for ((a, b) in state.walls) {
-                val ax = a.c * cellSize
-                val ay = a.r * cellSize
-                val bx = b.c * cellSize
-                val by = b.r * cellSize
+            Canvas(modifier = Modifier.matchParentSize()) {
+                val cellSizePx = size.width / state.cols
+                val stroke = (cellSizePx * 0.12f).coerceAtLeast(6f)
 
-                if (a.r == b.r) {
-                    // горизонтальная стена
-                    val y = (ay + by) / 2
-                    drawLine(
-                        Color.Black,
-                        start = androidx.compose.ui.geometry.Offset(ax, y),
-                        end = androidx.compose.ui.geometry.Offset(bx + cellSize, y),
-                        strokeWidth = 6f
-                    )
-                } else if (a.c == b.c) {
-                    // вертикальная стена
-                    val x = (ax + bx) / 2
-                    drawLine(
-                        Color.Black,
-                        start = androidx.compose.ui.geometry.Offset(x, ay),
-                        end = androidx.compose.ui.geometry.Offset(x, by + cellSize),
-                        strokeWidth = 6f
-                    )
+                for ((a, b) in state.walls) {
+                    if (a.r == b.r && abs(a.c - b.c) == 1) {
+                        val rowTop = a.r * cellSizePx
+                        val rowBottom = rowTop + cellSizePx
+                        val dividerX = maxOf(a.c, b.c) * cellSizePx
+
+                        drawLine(
+                            Color.Black,
+                            start = Offset(dividerX, rowTop),
+                            end = Offset(dividerX, rowBottom),
+                            strokeWidth = stroke
+                        )
+                    }
+                    else if (a.c == b.c && abs(a.r - b.r) == 1) {
+                        val colLeft = a.c * cellSizePx
+                        val colRight = colLeft + cellSizePx
+                        val dividerY = maxOf(a.r, b.r) * cellSizePx
+
+                        drawLine(
+                            Color.Black,
+                            start = Offset(colLeft, dividerY),
+                            end = Offset(colRight, dividerY),
+                            strokeWidth = stroke
+                        )
+                    }
                 }
             }
         }
