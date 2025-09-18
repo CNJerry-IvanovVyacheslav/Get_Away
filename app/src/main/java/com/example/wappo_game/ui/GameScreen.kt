@@ -1,6 +1,7 @@
 package com.example.wappo_game.ui
 
 import android.annotation.SuppressLint
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -13,12 +14,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.consumeAllChanges
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.times
 import com.example.wappo_game.domain.*
 import com.example.wappo_game.presentation.GameViewModel
 import kotlin.math.abs
@@ -56,7 +58,7 @@ fun GameScreen(vm: GameViewModel) {
                         onDrag = { change, dragAmount ->
                             totalDx += dragAmount.x
                             totalDy += dragAmount.y
-                            change.consumeAllChanges()
+                            change.consume()
                         },
                         onDragEnd = {
                             if (abs(totalDx) > abs(totalDy)) {
@@ -93,8 +95,14 @@ fun BoardView(state: GameState, modifier: Modifier = Modifier) {
         contentAlignment = Alignment.Center
     ) {
         val boardSize = min(maxWidth, maxHeight)
-
         val cellSizeDp = boardSize / state.cols
+        val cellSizePx = with(LocalDensity.current) { cellSizeDp.toPx() }
+
+        val playerX by animateDpAsState(targetValue = state.playerPos.c * cellSizeDp)
+        val playerY by animateDpAsState(targetValue = state.playerPos.r * cellSizeDp)
+
+        val enemyX by animateDpAsState(targetValue = state.enemyPos.c * cellSizeDp)
+        val enemyY by animateDpAsState(targetValue = state.enemyPos.r * cellSizeDp)
 
         Box(modifier = Modifier.size(boardSize)) {
             // Grid: rows x cols
@@ -104,13 +112,10 @@ fun BoardView(state: GameState, modifier: Modifier = Modifier) {
                         for (c in 0 until state.cols) {
                             val pos = Pos(r, c)
                             val tile = state.tileAt(pos)!!
-                            val isPlayer = state.playerPos == pos
-                            val isEnemy = state.enemyPos == pos
-                            val bg = when {
-                                isPlayer -> Color(0xFF4CAF50) // green
-                                isEnemy -> Color(0xFFF44336)  // red
-                                tile.type == TileType.TRAP -> Color(0xFF9C27B0) // magenta-ish
-                                tile.type == TileType.EXIT -> Color(0xFFFFEB3B) // yellow
+
+                            val bg = when (tile.type) {
+                                TileType.TRAP -> Color(0xFF9C27B0) // trap
+                                TileType.EXIT -> Color(0xFFFFEB3B) // exit
                                 else -> Color(0xFFEEEEEE)
                             }
 
@@ -121,11 +126,9 @@ fun BoardView(state: GameState, modifier: Modifier = Modifier) {
                                     .background(bg, RoundedCornerShape(6.dp)),
                                 contentAlignment = Alignment.Center
                             ) {
-                                when {
-                                    isPlayer -> Text("P", fontSize = (cellSizeDp / 3).value.sp, textAlign = TextAlign.Center)
-                                    isEnemy -> Text("E", fontSize = (cellSizeDp / 3).value.sp, textAlign = TextAlign.Center)
-                                    tile.type == TileType.TRAP -> Text("T", fontSize = (cellSizeDp / 3).value.sp)
-                                    tile.type == TileType.EXIT -> Text("EXIT", fontSize = (cellSizeDp / 6).value.sp)
+                                when (tile.type) {
+                                    TileType.TRAP -> Text("T", fontSize = (cellSizeDp / 3).value.sp)
+                                    TileType.EXIT -> Text("EXIT", fontSize = (cellSizeDp / 6).value.sp)
                                     else -> {}
                                 }
                             }
@@ -134,10 +137,9 @@ fun BoardView(state: GameState, modifier: Modifier = Modifier) {
                 }
             }
 
+            // Walls
             Canvas(modifier = Modifier.matchParentSize()) {
-                val cellSizePx = size.width / state.cols
                 val stroke = (cellSizePx * 0.12f).coerceAtLeast(6f)
-
                 for ((a, b) in state.walls) {
                     if (a.r == b.r && abs(a.c - b.c) == 1) {
                         val rowTop = a.r * cellSizePx
@@ -150,8 +152,7 @@ fun BoardView(state: GameState, modifier: Modifier = Modifier) {
                             end = Offset(dividerX, rowBottom),
                             strokeWidth = stroke
                         )
-                    }
-                    else if (a.c == b.c && abs(a.r - b.r) == 1) {
+                    } else if (a.c == b.c && abs(a.r - b.r) == 1) {
                         val colLeft = a.c * cellSizePx
                         val colRight = colLeft + cellSizePx
                         val dividerY = maxOf(a.r, b.r) * cellSizePx
@@ -164,6 +165,28 @@ fun BoardView(state: GameState, modifier: Modifier = Modifier) {
                         )
                     }
                 }
+            }
+
+            // Player
+            Box(
+                modifier = Modifier
+                    .offset(playerX, playerY)
+                    .size(cellSizeDp)
+                    .background(Color(0xFF4CAF50), RoundedCornerShape(6.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("P", fontSize = (cellSizeDp / 3).value.sp, textAlign = TextAlign.Center)
+            }
+
+            // Enemy
+            Box(
+                modifier = Modifier
+                    .offset(enemyX, enemyY)
+                    .size(cellSizeDp)
+                    .background(Color(0xFFF44336), RoundedCornerShape(6.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("E", fontSize = (cellSizeDp / 3).value.sp, textAlign = TextAlign.Center)
             }
         }
     }
