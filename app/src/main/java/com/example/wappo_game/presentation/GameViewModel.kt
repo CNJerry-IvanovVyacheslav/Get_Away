@@ -70,6 +70,10 @@ class GameViewModel : ViewModel() {
         repo.setState(createDefaultGameState())
     }
 
+    fun loadCustomMap(state: GameState) {
+        repo.setState(state)
+    }
+
     fun moveEnemyStepByStep(afterPlayer: GameState) {
         viewModelScope.launch {
             if (afterPlayer.result != GameResult.Ongoing) return@launch
