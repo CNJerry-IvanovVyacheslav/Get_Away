@@ -21,7 +21,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.unit.times
 import com.example.wappo_game.domain.*
 import com.example.wappo_game.presentation.GameViewModel
 import kotlin.math.abs
@@ -37,6 +36,8 @@ fun GameScreen(vm: GameViewModel, onBackToMenu: () -> Unit) {
                 .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Spacer(modifier = Modifier.height(64.dp))
+
             Text(
                 "Moves: ${state.playerMoves}  Result: ${state.result::class.simpleName}",
                 modifier = Modifier
@@ -44,8 +45,10 @@ fun GameScreen(vm: GameViewModel, onBackToMenu: () -> Unit) {
                 fontSize = 16.sp
             )
 
-            var totalDx by remember { mutableStateOf(0f) }
-            var totalDy by remember { mutableStateOf(0f) }
+            Spacer(modifier = Modifier.height(8.dp))
+
+            var totalDx by remember { mutableFloatStateOf(0f) }
+            var totalDy by remember { mutableFloatStateOf(0f) }
 
             Box(
                 modifier = Modifier
@@ -136,14 +139,19 @@ fun BoardView(state: GameState, modifier: Modifier = Modifier) {
                             Box(
                                 modifier = Modifier
                                     .size(cellSizeDp)
-                                    .padding(1.dp)
+                                    .padding(2.dp)
                                     .background(bg, RoundedCornerShape(6.dp)),
                                 contentAlignment = Alignment.Center
                             ) {
                                 when (tile.type) {
                                     TileType.TRAP -> Text("T", fontSize = (cellSizeDp / 3).value.sp)
-                                    TileType.EXIT -> Text("EXIT", fontSize = (cellSizeDp / 6).value.sp)
-                                    else -> { /* empty */ }
+                                    TileType.EXIT -> Text(
+                                        "EXIT",
+                                        fontSize = (cellSizeDp / 6).value.sp
+                                    )
+
+                                    else -> { /* empty */
+                                    }
                                 }
                             }
                         }
@@ -159,21 +167,37 @@ fun BoardView(state: GameState, modifier: Modifier = Modifier) {
                         val rowTop = a.r * cellSizePx
                         val rowBottom = rowTop + cellSizePx
                         val dividerX = maxOf(a.c, b.c) * cellSizePx
-                        drawLine(Color.Black, start = Offset(dividerX, rowTop), end = Offset(dividerX, rowBottom), strokeWidth = stroke)
+                        drawLine(
+                            Color.Black,
+                            start = Offset(dividerX, rowTop),
+                            end = Offset(dividerX, rowBottom),
+                            strokeWidth = stroke
+                        )
                     } else if (a.c == b.c && abs(a.r - b.r) == 1) {
                         val colLeft = a.c * cellSizePx
                         val colRight = colLeft + cellSizePx
                         val dividerY = maxOf(a.r, b.r) * cellSizePx
-                        drawLine(Color.Black, start = Offset(colLeft, dividerY), end = Offset(colRight, dividerY), strokeWidth = stroke)
+                        drawLine(
+                            Color.Black,
+                            start = Offset(colLeft, dividerY),
+                            end = Offset(colRight, dividerY),
+                            strokeWidth = stroke
+                        )
                     }
                 }
             }
+            val paddingFactor = 0.07f
+            val playerSize = cellSizeDp * (1f - paddingFactor)
+            val enemySize = cellSizeDp * (1f - paddingFactor)
 
             // Player (animated)
             Box(
                 modifier = Modifier
-                    .offset(playerX, playerY)
-                    .size(cellSizeDp)
+                    .offset(
+                        x = playerX + (cellSizeDp - playerSize) / 2,
+                        y = playerY + (cellSizeDp - playerSize) / 2
+                    )
+                    .size(playerSize)
                     .background(Color(0xFF4CAF50), RoundedCornerShape(6.dp)),
                 contentAlignment = Alignment.Center
             ) {
@@ -183,8 +207,11 @@ fun BoardView(state: GameState, modifier: Modifier = Modifier) {
             // Enemy (animated)
             Box(
                 modifier = Modifier
-                    .offset(enemyX, enemyY)
-                    .size(cellSizeDp)
+                    .offset(
+                        x = enemyX + (cellSizeDp - enemySize) / 2,
+                        y = enemyY + (cellSizeDp - enemySize) / 2
+                    )
+                    .size(enemySize)
                     .background(Color(0xFFF44336), RoundedCornerShape(6.dp)),
                 contentAlignment = Alignment.Center
             ) {

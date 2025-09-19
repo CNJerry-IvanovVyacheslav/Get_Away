@@ -39,16 +39,32 @@ fun movePlayer(state: GameState, to: Pos): GameState {
 fun stepTowardPlayerWithPriority(state: GameState, from: Pos): Pos {
     val player = state.playerPos
 
-    return when {
-        // horizontal priority
+    // Horizontal priority
+    val horizStep = when {
         player.c < from.c -> Pos(from.r, from.c - 1)
         player.c > from.c -> Pos(from.r, from.c + 1)
-        // if it matches horizontally → go vertically
+        else -> null
+    }
+
+    if (horizStep != null && state.inBounds(horizStep) && !state.isBlocked(from, horizStep)) {
+        return horizStep
+    }
+
+    // Vertical step, if the horizontal step is blocked or not needed.
+    val vertStep = when {
         player.r < from.r -> Pos(from.r - 1, from.c)
         player.r > from.r -> Pos(from.r + 1, from.c)
-        else -> from
+        else -> null
     }
+
+    if (vertStep != null && state.inBounds(vertStep) && !state.isBlocked(from, vertStep)) {
+        return vertStep
+    }
+
+    // If no move is possible, we stay put.
+    return from
 }
+
 
 fun enemyPath(state: GameState): List<Pos> {
     if (state.enemyFrozenTurns > 0 || state.result != GameResult.Ongoing) return emptyList()

@@ -23,7 +23,13 @@ class GameViewModel : ViewModel() {
 
     private fun tryMovePlayer(to: Pos) {
         val cur = repo.state.value
-        val afterPlayer = movePlayer(cur, to)
+
+        if (cur.result !is GameResult.Ongoing) return
+
+        val afterPlayer = movePlayer(cur, to).copy(
+            playerMoves = cur.playerMoves + 1
+        )
+
         repo.setState(afterPlayer)
 
         if (afterPlayer.result is GameResult.PlayerLost &&
