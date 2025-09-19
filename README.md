@@ -1,30 +1,47 @@
-# Jetpack Compose Turn-Based Grid Game
+# Wappo-Style Puzzle Game (Jetpack Compose)
 
-### A small turn-based strategy game built in **Kotlin** using **Jetpack Compose**.
+A puzzle game inspired by Wappo, built entirely with **Jetpack Compose** in Kotlin.  
+Navigate the player to the exit while avoiding the enemy and using traps strategically.
 
-## **Features:**
+## Features
 
-* 6x6 grid with player and enemy characters.
+- **6x6 grid** with player, enemy, traps, and exit
+- **Enemy AI**: prioritizes horizontal movement, respects walls, and reacts to traps
+- **Smooth animations** for player and enemy movement
+- **Trap mechanics**: freeze enemy for 3 turns or eliminate player if triggered
+- **Walls** drawn precisely between tiles
+- **Move counter** and game result displayed above the board
+- **Interactive Map Editor**: design custom levels with walls, traps, and exits, then playtest immediately
+- **Map Preview in Menu**: see a mini-version of the current or last designed map, including walls, traps, exit, and player/enemy positions
+- **Responsive UI**: tiles and characters scale nicely to screen size
 
-* Player moves 1 cell per turn; enemy moves 2 cells.
+## Technologies
 
-* Traps freeze the enemy or eliminate the player.
+- Kotlin + Jetpack Compose
+- StateFlow for reactive game state
+- Compose animations for smooth transitions
+- MVVM pattern
 
-* Walls block movement — strategic gameplay.
+## Latest Updates
 
-* Exit tile = player wins.
+- Added **mini map preview** in menu for quick level overview
+- Map Editor now fully integrated
+- Player and enemy centered in tiles to avoid overlap with walls
+- Enemy stops immediately when stepping on traps
+- Move counter correctly tracks player moves
+- Walls drawn accurately between tiles
+- Traps and exit labels visible in preview
+- Enhanced enemy AI with horizontal priority and wall awareness
 
-* Swipe gestures for intuitive player control.
+## How to Play
 
-* Clean Architecture (Domain, Data, Presentation) with MVVM.
-
-* Reactive state management using Kotlin Flow.
-
-## **Purpose:**
-This project demonstrates **Jetpack Compose for dynamic UI rendering, gesture handling**, and building **state-driven games** in a clean, maintainable architecture.
-
-**Future improvements**: animations, multiple levels, smarter enemy AI.
+1. Start the game from the **Menu**.
+2. Use swipe gestures to move the player.
+3. Avoid the enemy and strategically use traps to freeze it.
+4. Reach the **exit** to win.
+5. Optionally, open the **Editor** to create and save your own levels.
+6. Preview your custom map in the menu before starting a game.
 
 *(The game is inspired by the "Wappo Game" and is made solely to explore a technology that is new to me)*
 
-<img src="https://github.com/CNJerry-IvanovVyacheslav/Wappo_game/blob/master/photo_2025-09-17_12-29-48.jpg" width="200">    <img src="https://github.com/CNJerry-IvanovVyacheslav/Wappo_game/blob/master/photo_2025-09-17_12-29-48%20(2).jpg" width="200">
+<img src="https://github.com/CNJerry-IvanovVyacheslav/Wappo_game/blob/master/photo_3_2025-09-19_12-43-47.jpg" width="200">    <img src="https://github.com/CNJerry-IvanovVyacheslav/Wappo_game/blob/master/photo_2_2025-09-19_12-43-47.jpg" width="200">        <img src="https://github.com/CNJerry-IvanovVyacheslav/Wappo_game/blob/master/photo_1_2025-09-19_12-43-47.jpg" width="200">
