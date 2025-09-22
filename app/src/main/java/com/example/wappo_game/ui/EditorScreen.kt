@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -14,12 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.wappo_game.domain.GameResult
-import com.example.wappo_game.domain.GameState
-import com.example.wappo_game.domain.Pos
-import com.example.wappo_game.domain.Tile
-import com.example.wappo_game.domain.TileType
-import com.example.wappo_game.domain.Turn
+import com.example.wappo_game.domain.*
 import kotlin.math.abs
 
 enum class EditorMode { TILES, WALLS, PLAYER_START, ENEMY_START }
@@ -52,8 +48,13 @@ fun EditorScreen(
 
     var mode by remember { mutableStateOf(EditorMode.TILES) }
 
+    // New: map name state (pre-fill from initialState.name if present)
+    var mapName by remember { mutableStateOf(initialState?.name ?: "") }
+
     Column(
-        modifier = Modifier.fillMaxSize().padding(12.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(12.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Spacer(modifier = Modifier.height(8.dp))
@@ -67,6 +68,16 @@ fun EditorScreen(
             Button(onClick = { mode = EditorMode.PLAYER_START }) { Text("Set Player", fontSize = 11.sp) }
             Button(onClick = { mode = EditorMode.ENEMY_START }) { Text("Set Enemy", fontSize = 10.sp) }
         }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // Map name input
+        OutlinedTextField(
+            value = mapName,
+            onValueChange = { mapName = it },
+            label = { Text("Map name (optional)") },
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp)
+        )
 
         Spacer(modifier = Modifier.height(12.dp))
 
@@ -206,7 +217,8 @@ fun EditorScreen(
                     enemyFrozenTurns = 0,
                     turn = Turn.PLAYER,
                     result = GameResult.Ongoing,
-                    playerMoves = 0
+                    playerMoves = 0,
+                    name = mapName.ifBlank { "Custom Map" }
                 )
                 onSave(resultState)
                 onBack()

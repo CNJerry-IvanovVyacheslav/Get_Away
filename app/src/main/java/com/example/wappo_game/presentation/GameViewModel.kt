@@ -1,7 +1,10 @@
 package com.example.wappo_game.presentation
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import android.util.Log
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.wappo_game.data.DataStoreManager
 import com.example.wappo_game.data.InMemoryGameRepository
 import com.example.wappo_game.domain.GameResult
 import com.example.wappo_game.domain.GameState
@@ -12,14 +15,28 @@ import com.example.wappo_game.domain.createDefaultGameState
 import com.example.wappo_game.domain.enemyPath
 import com.example.wappo_game.domain.movePlayer
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-class GameViewModel : ViewModel() {
+class GameViewModel(app: Application) : AndroidViewModel(app) {
 
     private val repo = InMemoryGameRepository(createDefaultGameState())
+    private val dataStore = DataStoreManager(app)
 
     val state: StateFlow<GameState> = repo.state
+
+    val savedMaps: StateFlow<List<GameState>> =
+        dataStore.loadMaps().stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
+    private var currentMap: GameState
+
+    init {
+        val defaultMap = createDefaultGameState()
+        currentMap = defaultMap
+        loadCustomMap(defaultMap)
+    }
 
     private fun tryMovePlayer(to: Pos) {
         val cur = repo.state.value
@@ -72,12 +89,38 @@ class GameViewModel : ViewModel() {
         tryMovePlayer(Pos(cur.playerPos.r, cur.playerPos.c + 1))
     }
 
-    fun resetGame() {
-        repo.setState(createDefaultGameState())
-    }
 
     fun loadCustomMap(state: GameState) {
-        repo.setState(state)
+        val resetState = state.copy(
+            playerPos = state.initialPlayerPos,
+            enemyPos = state.initialEnemyPos,
+            tiles = state.tiles.map { it.copy() }.toMutableList(),
+            playerMoves = 0,
+            result = GameResult.Ongoing,
+            enemyFrozenTurns = 0,
+            turn = Turn.PLAYER
+        )
+        currentMap = state
+        repo.setState(resetState)
+        Log.d("GameViewModel", "Loaded map: $resetState")
+    }
+
+    fun saveCustomMap(state: GameState) {
+        viewModelScope.launch { dataStore.saveMap(state) }
+    }
+
+    fun deleteMap(name: String) {
+        viewModelScope.launch { dataStore.deleteMap(name) }
+    }
+
+    fun resetGame() {
+        currentMap.let { map ->
+            loadCustomMap(map)
+        }
+    }
+
+    fun clearAllMaps() {
+        viewModelScope.launch { dataStore.clearMaps() }
     }
 
     fun moveEnemyStepByStep(afterPlayer: GameState) {
@@ -112,7 +155,6 @@ class GameViewModel : ViewModel() {
 
                     return@launch
                 }
-
 
                 if (step == curState.playerPos) {
                     curState = curState.copy(result = GameResult.PlayerLost)

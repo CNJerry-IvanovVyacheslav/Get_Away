@@ -13,6 +13,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.wappo_game.presentation.GameViewModel
+import com.example.wappo_game.presentation.MapsScreen
 import com.example.wappo_game.presentation.MenuScreen
 
 class MainActivity : ComponentActivity() {
@@ -46,7 +47,8 @@ fun AppNavHost(gameViewModel: GameViewModel) {
                 previewState = gameViewModel.state.value,
                 onPlayClick = { navController.navigate("game") },
                 onEditorClick = { navController.navigate("editor") },
-                onExitClick = { activity?.finish() }
+                onExitClick = { activity?.finish() },
+                onMapsClick = { navController.navigate("maps") } // если добавишь кнопку в меню
             )
         }
 
@@ -58,12 +60,25 @@ fun AppNavHost(gameViewModel: GameViewModel) {
             EditorScreen(
                 onBack = { navController.popBackStack() },
                 onSave = { newState ->
+                    // save to DataStore list and also set it as current playable map
+                    gameViewModel.saveCustomMap(newState)
                     gameViewModel.loadCustomMap(newState)
                     navController.navigate("game")
                 },
                 rows = 6,
                 cols = 6,
                 initialState = gameViewModel.state.value
+            )
+        }
+
+        composable("maps") {
+            MapsScreen(
+                viewModel = gameViewModel,
+                onBack = { navController.popBackStack() },
+                onLoadMap = { map ->
+                    gameViewModel.loadCustomMap(map)
+                    navController.navigate("game")
+                }
             )
         }
     }

@@ -42,7 +42,8 @@ fun GameScreen(vm: GameViewModel, onBackToMenu: () -> Unit) {
                 "Moves: ${state.playerMoves}  Result: ${state.result::class.simpleName}",
                 modifier = Modifier
                     .padding(vertical = 16.dp),
-                fontSize = 16.sp
+                fontSize = 24.sp,
+                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
             )
 
             Spacer(modifier = Modifier.height(8.dp))
