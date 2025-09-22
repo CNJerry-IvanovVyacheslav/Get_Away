@@ -24,14 +24,10 @@ Navigate the player to the exit while avoiding the enemy and using traps strateg
 
 ## Latest Updates
 
-- Added **mini map preview** in menu for quick level overview
-- Map Editor now fully integrated
-- Player and enemy centered in tiles to avoid overlap with walls
-- Enemy stops immediately when stepping on traps
-- Move counter correctly tracks player moves
-- Walls drawn accurately between tiles
-- Traps and exit labels visible in preview
-- Enhanced enemy AI with horizontal priority and wall awareness
+- The list of saved maps now displays a preview of each map instead of a static size.  
+- Map names in the list and in the main menu are larger and visually enhanced.  
+- Improved element alignment: map preview, name, and delete button.  
+- Users can see the name of the selected map directly in the main menu along with its preview.
 
 ## How to Play
 
@@ -44,4 +40,4 @@ Navigate the player to the exit while avoiding the enemy and using traps strateg
 
 *(The game is inspired by the "Wappo Game" and is made solely to explore a technology that is new to me)*
 
-<img src="https://github.com/CNJerry-IvanovVyacheslav/Wappo_game/blob/master/photo_3_2025-09-19_12-43-47.jpg" width="200">    <img src="https://github.com/CNJerry-IvanovVyacheslav/Wappo_game/blob/master/photo_2_2025-09-19_12-43-47.jpg" width="200">        <img src="https://github.com/CNJerry-IvanovVyacheslav/Wappo_game/blob/master/photo_1_2025-09-19_12-43-47.jpg" width="200">
+<img src="https://github.com/CNJerry-IvanovVyacheslav/Wappo_game/blob/master/photo_3_2025-09-19_12-43-47.jpg" width="200">    <img src="https://github.com/CNJerry-IvanovVyacheslav/Wappo_game/blob/master/photo_2_2025-09-19_12-43-47.jpg" width="200">        <img src="https://github.com/CNJerry-IvanovVyacheslav/Wappo_game/blob/master/photo_1_2025-09-19_12-43-47.jpg" width="200"> <img src="https://github.com/CNJerry-IvanovVyacheslav/Wappo_game/blob/master/photo_2025-09-22_11-01-37.jpg" width="200">
