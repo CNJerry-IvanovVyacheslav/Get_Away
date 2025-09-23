@@ -24,7 +24,7 @@ Navigate the player to the exit while avoiding the enemy and using traps strateg
 
 ## Latest Updates
 
-- When opening the app, the last played card is now displayed.  
+- When opening the app, the last played map is now displayed.  
 - Now there are different buttons for creating a new map and changing the old one. 
 - The design of the screens for the horizontal mode has been changed.  
 
