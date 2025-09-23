@@ -24,10 +24,9 @@ Navigate the player to the exit while avoiding the enemy and using traps strateg
 
 ## Latest Updates
 
-- The list of saved maps now displays a preview of each map instead of a static size.  
-- Map names in the list and in the main menu are larger and visually enhanced.  
-- Improved element alignment: map preview, name, and delete button.  
-- Users can see the name of the selected map directly in the main menu along with its preview.
+- When opening the app, the last played card is now displayed.  
+- Now there are different buttons for creating a new map and changing the old one. 
+- The design of the screens for the horizontal mode has been changed.  
 
 ## How to Play
 
