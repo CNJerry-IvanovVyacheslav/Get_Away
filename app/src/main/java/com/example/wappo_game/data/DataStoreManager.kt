@@ -14,7 +14,6 @@ val Context.dataStore by preferencesDataStore("maps_prefs")
 
 class DataStoreManager(private val context: Context) {
     private val gson = Gson()
-    private val MAPS_KEY = stringPreferencesKey("custom_maps")
 
     fun loadMaps(): Flow<List<GameState>> {
         return context.dataStore.data.map { prefs ->
@@ -50,5 +49,20 @@ class DataStoreManager(private val context: Context) {
         context.dataStore.edit { prefs ->
             prefs[MAPS_KEY] = "[]"
         }
+    }
+
+    fun loadLastMapName(): Flow<String?> {
+        return context.dataStore.data.map { prefs -> prefs[LAST_MAP_KEY] }
+    }
+
+    suspend fun saveLastMapName(name: String) {
+        context.dataStore.edit { prefs ->
+            prefs[LAST_MAP_KEY] = name
+        }
+    }
+
+    private companion object {
+        private val MAPS_KEY = stringPreferencesKey("custom_maps")
+        private val LAST_MAP_KEY = stringPreferencesKey("last_map")
     }
 }

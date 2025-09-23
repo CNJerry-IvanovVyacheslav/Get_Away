@@ -8,7 +8,7 @@ fun movePlayer(state: GameState, to: Pos): GameState {
     if (state.isBlocked(state.playerPos, to)) return state
     if (state.playerPos.manhattan(to) != 1) return state
 
-    var newState = state.copy(playerPos = to)
+    val newState = state.copy(playerPos = to)
 
     if (newState.playerPos == newState.enemyPos) {
         return newState.copy(result = GameResult.PlayerLost)
@@ -61,7 +61,6 @@ fun stepTowardPlayerWithPriority(state: GameState, from: Pos): Pos {
         return vertStep
     }
 
-    // If no move is possible, we stay put.
     return from
 }
 
