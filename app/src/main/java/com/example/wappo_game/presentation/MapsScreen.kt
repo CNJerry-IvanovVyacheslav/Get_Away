@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -15,7 +16,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.wappo_game.domain.GameState
@@ -26,9 +26,10 @@ import com.example.wappo_game.ui.BoardPreview
 fun MapsScreen(
     viewModel: GameViewModel,
     onBack: () -> Unit,
+    onEditMap: (GameState) -> Unit,
     onLoadMap: (GameState) -> Unit
 ) {
-    val maps = viewModel.savedMaps.collectAsState().value
+    val maps by viewModel.savedMaps.collectAsState()
     var showClearDialog by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -36,14 +37,17 @@ fun MapsScreen(
     ) { padding ->
         Column(
             modifier = Modifier
+                .fillMaxSize()
                 .padding(padding)
                 .padding(12.dp)
-                .fillMaxSize()
         ) {
             if (maps.isEmpty()) {
                 Text("No saved maps yet", modifier = Modifier.padding(8.dp))
             } else {
-                LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.weight(1f)) {
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.weight(1f)
+                ) {
                     items(maps) { map ->
                         Card(
                             modifier = Modifier
@@ -61,29 +65,44 @@ fun MapsScreen(
                                     sizeDp = 140.dp
                                 )
 
-                                Box(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .padding(horizontal = 12.dp),
-                                    contentAlignment = Alignment.Center
+                                Spacer(modifier = Modifier.width(12.dp))
+
+                                Column(
+                                    modifier = Modifier.weight(1f),
+                                    verticalArrangement = Arrangement.Center
                                 ) {
                                     Text(
                                         text = map.name,
                                         fontSize = 18.sp,
-                                        fontWeight = FontWeight.Bold,
                                         maxLines = 2
                                     )
                                 }
 
-                                IconButton(
-                                    onClick = { viewModel.deleteMap(map.name) },
-                                    modifier = Modifier.size(40.dp)
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
-                                    Icon(
-                                        Icons.Default.Delete,
-                                        contentDescription = "Delete",
-                                        modifier = Modifier.size(32.dp)
-                                    )
+                                    IconButton(
+                                        onClick = { onEditMap(map) },
+                                        modifier = Modifier.size(48.dp)
+                                    ) {
+                                        Icon(
+                                            Icons.Default.Edit,
+                                            contentDescription = "Edit",
+                                            modifier = Modifier.size(36.dp)
+                                        )
+                                    }
+
+                                    IconButton(
+                                        onClick = { viewModel.deleteMap(map.name) },
+                                        modifier = Modifier.size(48.dp)
+                                    ) {
+                                        Icon(
+                                            Icons.Default.Delete,
+                                            contentDescription = "Delete",
+                                            modifier = Modifier.size(36.dp)
+                                        )
+                                    }
                                 }
                             }
                         }

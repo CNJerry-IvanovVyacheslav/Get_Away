@@ -52,10 +52,28 @@ fun BoardPreview(state: GameState, sizeDp: Dp) {
                                 contentAlignment = Alignment.Center
                             ) {
                                 when {
-                                    isPlayer -> Text("P", fontSize = (cellSize / 3).value.sp, textAlign = TextAlign.Center)
-                                    isEnemy -> Text("E", fontSize = (cellSize / 3).value.sp, textAlign = TextAlign.Center)
-                                    tile.type == TileType.TRAP -> Text("T", fontSize = (cellSize / 3).value.sp)
-                                    tile.type == TileType.EXIT -> Text("EXIT", fontSize = (cellSize / 6).value.sp)
+                                    isPlayer -> Text(
+                                        "P",
+                                        fontSize = (cellSize / 3).value.sp,
+                                        textAlign = TextAlign.Center
+                                    )
+
+                                    isEnemy -> Text(
+                                        "E",
+                                        fontSize = (cellSize / 3).value.sp,
+                                        textAlign = TextAlign.Center
+                                    )
+
+                                    tile.type == TileType.TRAP -> Text(
+                                        "T",
+                                        fontSize = (cellSize / 3).value.sp
+                                    )
+
+                                    tile.type == TileType.EXIT -> Text(
+                                        "EXIT",
+                                        fontSize = (cellSize / 6).value.sp
+                                    )
+
                                     else -> {}
                                 }
                             }
@@ -72,12 +90,22 @@ fun BoardPreview(state: GameState, sizeDp: Dp) {
                         val rowTop = a.r * cellSize.toPx()
                         val rowBottom = rowTop + cellSize.toPx()
                         val dividerX = maxOf(a.c, b.c) * cellSize.toPx()
-                        drawLine(Color.Black, start = Offset(dividerX, rowTop), end = Offset(dividerX, rowBottom), strokeWidth = stroke)
+                        drawLine(
+                            Color.Black,
+                            start = Offset(dividerX, rowTop),
+                            end = Offset(dividerX, rowBottom),
+                            strokeWidth = stroke
+                        )
                     } else if (a.c == b.c && abs(a.r - b.r) == 1) {
                         val colLeft = a.c * cellSize.toPx()
                         val colRight = colLeft + cellSize.toPx()
                         val dividerY = maxOf(a.r, b.r) * cellSize.toPx()
-                        drawLine(Color.Black, start = Offset(colLeft, dividerY), end = Offset(colRight, dividerY), strokeWidth = stroke)
+                        drawLine(
+                            Color.Black,
+                            start = Offset(colLeft, dividerY),
+                            end = Offset(colRight, dividerY),
+                            strokeWidth = stroke
+                        )
                     }
                 }
             }

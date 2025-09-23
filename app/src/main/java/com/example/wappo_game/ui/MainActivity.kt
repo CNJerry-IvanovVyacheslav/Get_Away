@@ -9,6 +9,8 @@ import androidx.activity.viewModels
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -21,7 +23,6 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         setContent {
             MaterialTheme {
                 Surface {
@@ -36,19 +37,18 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun AppNavHost(gameViewModel: GameViewModel) {
     val navController = rememberNavController()
-    val activity = (LocalActivity.current)
+    val lastMap by gameViewModel.lastMapState.collectAsState()
+    val activity = LocalActivity.current
 
-    NavHost(
-        navController = navController,
-        startDestination = "menu"
-    ) {
+    NavHost(navController = navController, startDestination = "menu") {
+
         composable("menu") {
             MenuScreen(
-                previewState = gameViewModel.state.value,
                 onPlayClick = { navController.navigate("game") },
-                onEditorClick = { navController.navigate("editor") },
+                onCreateMapClick = { navController.navigate("create_map") },
                 onExitClick = { activity?.finish() },
-                onMapsClick = { navController.navigate("maps") } // если добавишь кнопку в меню
+                onMapsClick = { navController.navigate("saved_maps") },
+                previewState = lastMap
             )
         }
 
@@ -56,28 +56,46 @@ fun AppNavHost(gameViewModel: GameViewModel) {
             GameScreen(vm = gameViewModel, onBackToMenu = { navController.popBackStack() })
         }
 
-        composable("editor") {
+        composable("create_map") {
             EditorScreen(
-                onBack = { navController.popBackStack() },
-                onSave = { newState ->
-                    // save to DataStore list and also set it as current playable map
-                    gameViewModel.saveCustomMap(newState)
-                    gameViewModel.loadCustomMap(newState)
-                    navController.navigate("game")
-                },
-                rows = 6,
-                cols = 6,
-                initialState = gameViewModel.state.value
+                viewModel = gameViewModel,
+                initialState = null, // пустое поле для новой карты
+                onGoToMenu = {
+                    navController.navigate("menu") {
+                        popUpTo("create_map") { inclusive = true }
+                    }
+                }
             )
         }
 
-        composable("maps") {
+
+        composable("editor_for_edit/{mapName}") { backStackEntry ->
+            val mapName = backStackEntry.arguments?.getString("mapName")
+            val map = gameViewModel.savedMaps.value.find { it.name == mapName }
+            if (map != null) {
+                EditorScreen(
+                    viewModel = gameViewModel,
+                    initialState = map,
+                    onGoToMenu = {
+                        navController.navigate("menu") {
+                            popUpTo("editor_for_edit/$mapName") { inclusive = true }
+                        }
+                    }
+                )
+            }
+        }
+
+
+        composable("saved_maps") {
             MapsScreen(
                 viewModel = gameViewModel,
                 onBack = { navController.popBackStack() },
                 onLoadMap = { map ->
                     gameViewModel.loadCustomMap(map)
-                    navController.navigate("game")
+                    navController.popBackStack()
+                },
+                onEditMap = { map ->
+                    navController.navigate("editor_for_edit/${map.name}")
                 }
             )
         }
