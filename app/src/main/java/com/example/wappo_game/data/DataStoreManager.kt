@@ -23,9 +23,6 @@ class DataStoreManager(private val context: Context) {
         }
     }
 
-    /**
-     * Сохраняет новую карту или обновляет существующую по имени
-     */
     suspend fun saveOrUpdateMap(map: GameState) {
         context.dataStore.edit { prefs ->
             val json = prefs[MAPS_KEY] ?: "[]"
@@ -33,10 +30,8 @@ class DataStoreManager(private val context: Context) {
             val current = gson.fromJson<List<GameState>>(json, type) ?: emptyList()
 
             val updated = if (current.any { it.name == map.name }) {
-                // Обновляем существующую карту
                 current.map { if (it.name == map.name) map else it }
             } else {
-                // Добавляем новую карту
                 current + map
             }
 
@@ -49,7 +44,6 @@ class DataStoreManager(private val context: Context) {
             val json = prefs[MAPS_KEY] ?: "[]"
             val type = object : TypeToken<List<GameState>>() {}.type
             val current = gson.fromJson<List<GameState>>(json, type) ?: emptyList()
-
             val updated = current.filterNot { it.name == name }
             prefs[MAPS_KEY] = gson.toJson(updated)
         }

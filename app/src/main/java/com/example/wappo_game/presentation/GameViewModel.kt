@@ -106,6 +106,7 @@ class GameViewModel(app: Application) : AndroidViewModel(app) {
     fun saveCustomMap(state: GameState) = viewModelScope.launch {
         dataStore.saveOrUpdateMap(state)
     }
+
     fun deleteMap(name: String) = viewModelScope.launch { dataStore.deleteMap(name) }
     fun resetGame() = loadCustomMap(currentMap)
     fun clearAllMaps() = viewModelScope.launch { dataStore.clearMaps() }

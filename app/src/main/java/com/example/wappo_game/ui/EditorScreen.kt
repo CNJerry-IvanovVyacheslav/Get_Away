@@ -166,24 +166,26 @@ fun EditorScreen(
                             name = finalName
                         )
 
-                        // Проверяем дубликат только при создании новой карты
-                        if (initialState == null && viewModel.savedMaps.value.any { it.name == finalName }) {
+                        val isDuplicate =
+                            viewModel.savedMaps.value.any { it.name == finalName && it != initialState }
+
+                        if (isDuplicate) {
                             showDuplicateSnackbar = true
                             return@Button
                         }
 
-                        // Сохраняем или обновляем карту
                         viewModel.saveCustomMap(resultState)
 
-                        // Возврат в меню
                         onGoToMenu()
-                    }) { Text("Save") }
-                }
+                    }) {
+                        Text("Save")
+                    }
 
-                if (showDuplicateSnackbar) {
-                    LaunchedEffect(showDuplicateSnackbar) {
-                        snackbarHostState.showSnackbar("Map with this name already exists!")
-                        showDuplicateSnackbar = false
+                    if (showDuplicateSnackbar) {
+                        LaunchedEffect(showDuplicateSnackbar) {
+                            snackbarHostState.showSnackbar("Map with this name already exists!")
+                            showDuplicateSnackbar = false
+                        }
                     }
                 }
             }

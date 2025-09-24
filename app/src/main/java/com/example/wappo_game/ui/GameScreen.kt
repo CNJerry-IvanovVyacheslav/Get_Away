@@ -34,22 +34,18 @@ fun GameScreen(vm: GameViewModel, onBackToMenu: () -> Unit) {
     val isLandscape = config.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
 
     if (isLandscape) {
-        // ===== ЛАНДШАФТНАЯ ВЕРСИЯ =====
         Box(modifier = Modifier.fillMaxSize()) {
             Column(modifier = Modifier.fillMaxSize()) {
-                // Верхняя панель
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 8.dp, vertical = 12.dp)
                 ) {
-                    // Menu слева
                     Button(
                         onClick = onBackToMenu,
                         modifier = Modifier.align(Alignment.CenterStart)
                     ) { Text("Menu") }
 
-                    // Moves по центру
                     Text(
                         "Moves: ${state.playerMoves}  Result: ${state.result::class.simpleName}",
                         modifier = Modifier.align(Alignment.Center),
@@ -57,19 +53,16 @@ fun GameScreen(vm: GameViewModel, onBackToMenu: () -> Unit) {
                         fontWeight = FontWeight.Bold
                     )
 
-                    // Reset справа
                     Button(
                         onClick = { vm.resetGame() },
                         modifier = Modifier.align(Alignment.CenterEnd)
                     ) { Text("Reset") }
                 }
 
-                // Игровое поле на всю оставшуюся высоту
                 SwipeBoard(state, vm, modifier = Modifier.weight(1f))
             }
         }
     } else {
-        // ===== ПОРТРЕТНАЯ ВЕРСИЯ (старая) =====
         Box(modifier = Modifier.fillMaxSize()) {
             Column(
                 modifier = Modifier.fillMaxSize(),
@@ -100,7 +93,6 @@ fun GameScreen(vm: GameViewModel, onBackToMenu: () -> Unit) {
                 }
             }
 
-            // Menu в портретном режиме
             Button(
                 onClick = onBackToMenu,
                 modifier = Modifier
@@ -158,14 +150,12 @@ fun BoardView(state: GameState, modifier: Modifier = Modifier) {
         val density = LocalDensity.current
         val cellSizePx = with(density) { cellSizeDp.toPx() }
 
-        // animated positions (each change of state.playerPos / enemyPos will animate)
         val playerX by animateDpAsState(targetValue = cellSizeDp * state.playerPos.c)
         val playerY by animateDpAsState(targetValue = cellSizeDp * state.playerPos.r)
         val enemyX by animateDpAsState(targetValue = cellSizeDp * state.enemyPos.c)
         val enemyY by animateDpAsState(targetValue = cellSizeDp * state.enemyPos.r)
 
         Box(modifier = Modifier.size(boardSize)) {
-            // Grid cells
             Column(modifier = Modifier.fillMaxSize()) {
                 for (r in 0 until state.rows) {
                     Row(modifier = Modifier.height(cellSizeDp)) {
@@ -192,8 +182,7 @@ fun BoardView(state: GameState, modifier: Modifier = Modifier) {
                                         fontSize = (cellSizeDp / 6).value.sp
                                     )
 
-                                    else -> { /* empty */
-                                    }
+                                    else -> {}
                                 }
                             }
                         }
