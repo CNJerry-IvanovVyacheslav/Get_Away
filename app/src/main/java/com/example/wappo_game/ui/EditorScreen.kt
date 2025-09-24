@@ -166,20 +166,26 @@ fun EditorScreen(
                             name = finalName
                         )
 
-                        if (initialState == null && viewModel.savedMaps.value.any { it.name == finalName }) {
+                        val isDuplicate =
+                            viewModel.savedMaps.value.any { it.name == finalName && it != initialState }
+
+                        if (isDuplicate) {
                             showDuplicateSnackbar = true
                             return@Button
                         }
 
                         viewModel.saveCustomMap(resultState)
-                        onGoToMenu()
-                    }) { Text("Save") }
-                }
 
-                if (showDuplicateSnackbar) {
-                    LaunchedEffect(showDuplicateSnackbar) {
-                        snackbarHostState.showSnackbar("Map with this name already exists!")
-                        showDuplicateSnackbar = false
+                        onGoToMenu()
+                    }) {
+                        Text("Save")
+                    }
+
+                    if (showDuplicateSnackbar) {
+                        LaunchedEffect(showDuplicateSnackbar) {
+                            snackbarHostState.showSnackbar("Map with this name already exists!")
+                            showDuplicateSnackbar = false
+                        }
                     }
                 }
             }

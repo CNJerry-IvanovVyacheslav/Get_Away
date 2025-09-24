@@ -59,7 +59,7 @@ fun AppNavHost(gameViewModel: GameViewModel) {
         composable("create_map") {
             EditorScreen(
                 viewModel = gameViewModel,
-                initialState = null, // пустое поле для новой карты
+                initialState = null,
                 onGoToMenu = {
                     navController.navigate("menu") {
                         popUpTo("create_map") { inclusive = true }

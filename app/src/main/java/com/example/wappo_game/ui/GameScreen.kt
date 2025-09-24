@@ -15,7 +15,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -28,80 +30,111 @@ import kotlin.math.abs
 @Composable
 fun GameScreen(vm: GameViewModel, onBackToMenu: () -> Unit) {
     val state by vm.state.collectAsState()
+    val config = LocalConfiguration.current
+    val isLandscape = config.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    if (isLandscape) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(modifier = Modifier.fillMaxSize()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp, vertical = 12.dp)
+                ) {
+                    Button(
+                        onClick = onBackToMenu,
+                        modifier = Modifier.align(Alignment.CenterStart)
+                    ) { Text("Menu") }
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Spacer(modifier = Modifier.height(64.dp))
+                    Text(
+                        "Moves: ${state.playerMoves}  Result: ${state.result::class.simpleName}",
+                        modifier = Modifier.align(Alignment.Center),
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold
+                    )
 
-            Text(
-                "Moves: ${state.playerMoves}  Result: ${state.result::class.simpleName}",
+                    Button(
+                        onClick = { vm.resetGame() },
+                        modifier = Modifier.align(Alignment.CenterEnd)
+                    ) { Text("Reset") }
+                }
+
+                SwipeBoard(state, vm, modifier = Modifier.weight(1f))
+            }
+        }
+    } else {
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Spacer(modifier = Modifier.height(64.dp))
+
+                Text(
+                    "Moves: ${state.playerMoves}  Result: ${state.result::class.simpleName}",
+                    modifier = Modifier.padding(vertical = 16.dp),
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                SwipeBoard(state, vm, modifier = Modifier.weight(1f))
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 24.dp),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Button(onClick = { vm.resetGame() }) { Text("Reset") }
+                }
+            }
+
+            Button(
+                onClick = onBackToMenu,
                 modifier = Modifier
-                    .padding(vertical = 16.dp),
-                fontSize = 24.sp,
-                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            var totalDx by remember { mutableFloatStateOf(0f) }
-            var totalDy by remember { mutableFloatStateOf(0f) }
-
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
+                    .align(Alignment.TopStart)
                     .padding(8.dp)
-                    .pointerInput(Unit) {
-                        detectDragGestures(
-                            onDragStart = {
-                                totalDx = 0f
-                                totalDy = 0f
-                            },
-                            onDrag = { change, dragAmount ->
-                                totalDx += dragAmount.x
-                                totalDy += dragAmount.y
-                                change.consume()
-                            },
-                            onDragEnd = {
-                                if (abs(totalDx) > abs(totalDy)) {
-                                    if (totalDx > 0) vm.moveRight() else vm.moveLeft()
-                                } else {
-                                    if (totalDy > 0) vm.moveDown() else vm.moveUp()
-                                }
-                            }
-                        )
+            ) { Text("Menu") }
+        }
+    }
+}
+
+@Composable
+private fun SwipeBoard(state: GameState, vm: GameViewModel, modifier: Modifier = Modifier) {
+    var totalDx by remember { mutableFloatStateOf(0f) }
+    var totalDy by remember { mutableFloatStateOf(0f) }
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+            .pointerInput(Unit) {
+                detectDragGestures(
+                    onDragStart = {
+                        totalDx = 0f
+                        totalDy = 0f
                     },
-                contentAlignment = Alignment.Center
-            ) {
-                BoardView(state = state, modifier = Modifier.fillMaxSize())
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 24.dp),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Button(onClick = { vm.resetGame() }) { Text("Reset") }
-            }
-        }
-
-        // Menu button in top-left corner (over the board)
-        Button(
-            onClick = onBackToMenu,
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .padding(8.dp)
-        ) {
-            Text("Menu")
-        }
+                    onDrag = { change, dragAmount ->
+                        totalDx += dragAmount.x
+                        totalDy += dragAmount.y
+                        change.consume()
+                    },
+                    onDragEnd = {
+                        if (abs(totalDx) > abs(totalDy)) {
+                            if (totalDx > 0) vm.moveRight() else vm.moveLeft()
+                        } else {
+                            if (totalDy > 0) vm.moveDown() else vm.moveUp()
+                        }
+                    }
+                )
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        BoardView(state = state, modifier = Modifier.fillMaxSize())
     }
 }
 
@@ -117,14 +150,12 @@ fun BoardView(state: GameState, modifier: Modifier = Modifier) {
         val density = LocalDensity.current
         val cellSizePx = with(density) { cellSizeDp.toPx() }
 
-        // animated positions (each change of state.playerPos / enemyPos will animate)
         val playerX by animateDpAsState(targetValue = cellSizeDp * state.playerPos.c)
         val playerY by animateDpAsState(targetValue = cellSizeDp * state.playerPos.r)
         val enemyX by animateDpAsState(targetValue = cellSizeDp * state.enemyPos.c)
         val enemyY by animateDpAsState(targetValue = cellSizeDp * state.enemyPos.r)
 
         Box(modifier = Modifier.size(boardSize)) {
-            // Grid cells
             Column(modifier = Modifier.fillMaxSize()) {
                 for (r in 0 until state.rows) {
                     Row(modifier = Modifier.height(cellSizeDp)) {
@@ -151,8 +182,7 @@ fun BoardView(state: GameState, modifier: Modifier = Modifier) {
                                         fontSize = (cellSizeDp / 6).value.sp
                                     )
 
-                                    else -> { /* empty */
-                                    }
+                                    else -> {}
                                 }
                             }
                         }
