@@ -23,13 +23,23 @@ class DataStoreManager(private val context: Context) {
         }
     }
 
-    suspend fun saveMap(newMap: GameState) {
+    /**
+     * Сохраняет новую карту или обновляет существующую по имени
+     */
+    suspend fun saveOrUpdateMap(map: GameState) {
         context.dataStore.edit { prefs ->
             val json = prefs[MAPS_KEY] ?: "[]"
             val type = object : TypeToken<List<GameState>>() {}.type
             val current = gson.fromJson<List<GameState>>(json, type) ?: emptyList()
 
-            val updated = current + newMap.copy(name = newMap.name)
+            val updated = if (current.any { it.name == map.name }) {
+                // Обновляем существующую карту
+                current.map { if (it.name == map.name) map else it }
+            } else {
+                // Добавляем новую карту
+                current + map
+            }
+
             prefs[MAPS_KEY] = gson.toJson(updated)
         }
     }

@@ -166,12 +166,16 @@ fun EditorScreen(
                             name = finalName
                         )
 
+                        // Проверяем дубликат только при создании новой карты
                         if (initialState == null && viewModel.savedMaps.value.any { it.name == finalName }) {
                             showDuplicateSnackbar = true
                             return@Button
                         }
 
+                        // Сохраняем или обновляем карту
                         viewModel.saveCustomMap(resultState)
+
+                        // Возврат в меню
                         onGoToMenu()
                     }) { Text("Save") }
                 }
