@@ -72,4 +72,8 @@ dependencies {
 
     implementation("androidx.datastore:datastore-preferences:1.1.7")
     implementation("com.google.code.gson:gson:2.13.2")
+
+
+    testImplementation("com.google.truth:truth:1.1.5")
+    androidTestImplementation("com.google.truth:truth:1.1.5")
 }
