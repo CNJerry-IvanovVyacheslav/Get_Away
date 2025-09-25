@@ -33,6 +33,31 @@ fun GameScreen(vm: GameViewModel, onBackToMenu: () -> Unit) {
     val config = LocalConfiguration.current
     val isLandscape = config.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
 
+    // Показываем всплывающее окно при победе или поражении
+    if (state.result is GameResult.PlayerWon || state.result is GameResult.PlayerLost) {
+        val message = when (state.result) {
+            is GameResult.PlayerWon -> "🎉 Victory!"
+            is GameResult.PlayerLost -> "💀 Defeat!"
+            else -> ""
+        }
+
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { },
+            confirmButton = {
+                Button(onClick = { vm.resetGame() }) {
+                    Text("Restart")
+                }
+            },
+            dismissButton = {
+                Button(onClick = onBackToMenu) {
+                    Text("Menu")
+                }
+            },
+            title = { Text(message, fontSize = 22.sp, fontWeight = FontWeight.Bold) },
+            text = { Text("Total moves: ${state.playerMoves}") }
+        )
+    }
+
     if (isLandscape) {
         Box(modifier = Modifier.fillMaxSize()) {
             Column(modifier = Modifier.fillMaxSize()) {
@@ -47,7 +72,7 @@ fun GameScreen(vm: GameViewModel, onBackToMenu: () -> Unit) {
                     ) { Text("Menu") }
 
                     Text(
-                        "Moves: ${state.playerMoves}  Result: ${state.result::class.simpleName}",
+                        "Moves: ${state.playerMoves}",
                         modifier = Modifier.align(Alignment.Center),
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold
@@ -71,7 +96,7 @@ fun GameScreen(vm: GameViewModel, onBackToMenu: () -> Unit) {
                 Spacer(modifier = Modifier.height(64.dp))
 
                 Text(
-                    "Moves: ${state.playerMoves}  Result: ${state.result::class.simpleName}",
+                    "Moves: ${state.playerMoves}",
                     modifier = Modifier.padding(vertical = 16.dp),
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
