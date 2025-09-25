@@ -33,7 +33,6 @@ fun GameScreen(vm: GameViewModel, onBackToMenu: () -> Unit) {
     val config = LocalConfiguration.current
     val isLandscape = config.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
 
-    // Показываем всплывающее окно при победе или поражении
     if (state.result is GameResult.PlayerWon || state.result is GameResult.PlayerLost) {
         val message = when (state.result) {
             is GameResult.PlayerWon -> "🎉 Victory!"
