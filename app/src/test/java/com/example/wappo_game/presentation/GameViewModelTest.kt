@@ -81,7 +81,17 @@ class GameViewModelTest {
             repo.setState(resetState)
             _lastMapState.value = state
         }
+
+        // ✅ Добавляем эти методы для теста MapsScreen
+        fun deleteMap(name: String) = kotlinx.coroutines.runBlocking {
+            dataStore.deleteMap(name)
+        }
+
+        fun clearAllMaps() = kotlinx.coroutines.runBlocking {
+            dataStore.clearMaps()
+        }
     }
+
 
     @Test
     fun `initial state is default map`() = runTest {
