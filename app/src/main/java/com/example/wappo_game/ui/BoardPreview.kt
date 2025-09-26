@@ -16,6 +16,7 @@ import com.example.wappo_game.domain.TileType
 import androidx.compose.material3.Text
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import kotlin.math.abs
@@ -23,7 +24,9 @@ import kotlin.math.abs
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 fun BoardPreview(state: GameState, sizeDp: Dp) {
-    BoxWithConstraints(modifier = Modifier.size(sizeDp)) {
+    BoxWithConstraints(modifier = Modifier
+        .size(sizeDp)
+        .testTag("BoardPreview")) {
         val cellSize = sizeDp / state.cols
 
         Box(modifier = Modifier.fillMaxSize()) {
