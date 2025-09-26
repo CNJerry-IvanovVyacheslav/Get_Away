@@ -1,8 +1,10 @@
 package com.example.wappo_game.data
 
 import android.content.Context
+import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
 import com.example.wappo_game.domain.GameState
 import com.google.gson.Gson
@@ -12,11 +14,14 @@ import kotlinx.coroutines.flow.map
 
 val Context.dataStore by preferencesDataStore("maps_prefs")
 
-class DataStoreManager(private val context: Context) {
-    private val gson = Gson()
+class DataStoreManager(
+    private val dataStore: DataStore<Preferences>,
+    private val gson: Gson = Gson()
+) {
+    constructor(context: Context) : this(context.dataStore)
 
     fun loadMaps(): Flow<List<GameState>> {
-        return context.dataStore.data.map { prefs ->
+        return dataStore.data.map { prefs ->
             val json = prefs[MAPS_KEY] ?: "[]"
             val type = object : TypeToken<List<GameState>>() {}.type
             gson.fromJson<List<GameState>>(json, type) ?: emptyList()
@@ -24,7 +29,7 @@ class DataStoreManager(private val context: Context) {
     }
 
     suspend fun saveOrUpdateMap(map: GameState) {
-        context.dataStore.edit { prefs ->
+        dataStore.edit { prefs ->
             val json = prefs[MAPS_KEY] ?: "[]"
             val type = object : TypeToken<List<GameState>>() {}.type
             val current = gson.fromJson<List<GameState>>(json, type) ?: emptyList()
@@ -40,7 +45,7 @@ class DataStoreManager(private val context: Context) {
     }
 
     suspend fun deleteMap(name: String) {
-        context.dataStore.edit { prefs ->
+        dataStore.edit { prefs ->
             val json = prefs[MAPS_KEY] ?: "[]"
             val type = object : TypeToken<List<GameState>>() {}.type
             val current = gson.fromJson<List<GameState>>(json, type) ?: emptyList()
@@ -50,17 +55,17 @@ class DataStoreManager(private val context: Context) {
     }
 
     suspend fun clearMaps() {
-        context.dataStore.edit { prefs ->
+        dataStore.edit { prefs ->
             prefs[MAPS_KEY] = "[]"
         }
     }
 
     fun loadLastMapName(): Flow<String?> {
-        return context.dataStore.data.map { prefs -> prefs[LAST_MAP_KEY] }
+        return dataStore.data.map { prefs -> prefs[LAST_MAP_KEY] }
     }
 
     suspend fun saveLastMapName(name: String) {
-        context.dataStore.edit { prefs ->
+        dataStore.edit { prefs ->
             prefs[LAST_MAP_KEY] = name
         }
     }
