@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
@@ -128,7 +129,7 @@ fun GameScreen(vm: GameViewModel, onBackToMenu: () -> Unit) {
 }
 
 @Composable
-private fun SwipeBoard(state: GameState, vm: GameViewModel, modifier: Modifier = Modifier) {
+internal fun SwipeBoard(state: GameState, vm: GameViewModel, modifier: Modifier = Modifier) {
     var totalDx by remember { mutableFloatStateOf(0f) }
     var totalDy by remember { mutableFloatStateOf(0f) }
 
@@ -136,6 +137,7 @@ private fun SwipeBoard(state: GameState, vm: GameViewModel, modifier: Modifier =
         modifier = modifier
             .fillMaxWidth()
             .padding(8.dp)
+            .testTag("SwipeBoard")
             .pointerInput(Unit) {
                 detectDragGestures(
                     onDragStart = {
