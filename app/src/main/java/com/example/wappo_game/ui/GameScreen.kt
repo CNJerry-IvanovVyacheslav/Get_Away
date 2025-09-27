@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
@@ -33,6 +34,30 @@ fun GameScreen(vm: GameViewModel, onBackToMenu: () -> Unit) {
     val config = LocalConfiguration.current
     val isLandscape = config.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
 
+    if (state.result is GameResult.PlayerWon || state.result is GameResult.PlayerLost) {
+        val message = when (state.result) {
+            is GameResult.PlayerWon -> "🎉 Victory!"
+            is GameResult.PlayerLost -> "💀 Defeat!"
+            else -> ""
+        }
+
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { },
+            confirmButton = {
+                Button(onClick = { vm.resetGame() }) {
+                    Text("Restart")
+                }
+            },
+            dismissButton = {
+                Button(onClick = onBackToMenu) {
+                    Text("Menu")
+                }
+            },
+            title = { Text(message, fontSize = 22.sp, fontWeight = FontWeight.Bold) },
+            text = { Text("Total moves: ${state.playerMoves}") }
+        )
+    }
+
     if (isLandscape) {
         Box(modifier = Modifier.fillMaxSize()) {
             Column(modifier = Modifier.fillMaxSize()) {
@@ -47,7 +72,7 @@ fun GameScreen(vm: GameViewModel, onBackToMenu: () -> Unit) {
                     ) { Text("Menu") }
 
                     Text(
-                        "Moves: ${state.playerMoves}  Result: ${state.result::class.simpleName}",
+                        "Moves: ${state.playerMoves}",
                         modifier = Modifier.align(Alignment.Center),
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold
@@ -71,7 +96,7 @@ fun GameScreen(vm: GameViewModel, onBackToMenu: () -> Unit) {
                 Spacer(modifier = Modifier.height(64.dp))
 
                 Text(
-                    "Moves: ${state.playerMoves}  Result: ${state.result::class.simpleName}",
+                    "Moves: ${state.playerMoves}",
                     modifier = Modifier.padding(vertical = 16.dp),
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
@@ -104,7 +129,7 @@ fun GameScreen(vm: GameViewModel, onBackToMenu: () -> Unit) {
 }
 
 @Composable
-private fun SwipeBoard(state: GameState, vm: GameViewModel, modifier: Modifier = Modifier) {
+internal fun SwipeBoard(state: GameState, vm: GameViewModel, modifier: Modifier = Modifier) {
     var totalDx by remember { mutableFloatStateOf(0f) }
     var totalDy by remember { mutableFloatStateOf(0f) }
 
@@ -112,6 +137,7 @@ private fun SwipeBoard(state: GameState, vm: GameViewModel, modifier: Modifier =
         modifier = modifier
             .fillMaxWidth()
             .padding(8.dp)
+            .testTag("SwipeBoard")
             .pointerInput(Unit) {
                 detectDragGestures(
                     onDragStart = {
@@ -190,7 +216,6 @@ fun BoardView(state: GameState, modifier: Modifier = Modifier) {
                 }
             }
 
-            // Walls drawn on Canvas (px)
             Canvas(modifier = Modifier.matchParentSize()) {
                 val stroke = (cellSizePx * 0.1f).coerceAtLeast(6f)
                 for ((a, b) in state.walls) {
@@ -221,7 +246,6 @@ fun BoardView(state: GameState, modifier: Modifier = Modifier) {
             val playerSize = cellSizeDp * (1f - paddingFactor)
             val enemySize = cellSizeDp * (1f - paddingFactor)
 
-            // Player (animated)
             Box(
                 modifier = Modifier
                     .offset(
@@ -235,7 +259,6 @@ fun BoardView(state: GameState, modifier: Modifier = Modifier) {
                 Text("P", fontSize = (cellSizeDp / 3).value.sp, textAlign = TextAlign.Center)
             }
 
-            // Enemy (animated)
             Box(
                 modifier = Modifier
                     .offset(

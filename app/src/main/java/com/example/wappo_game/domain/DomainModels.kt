@@ -50,20 +50,17 @@ fun createDefaultGameState(): GameState {
         Tile(Pos(r, c), TileType.EMPTY)
     }.toMutableList()
 
-    // list of traps
     val traps = listOf(
         Pos(0, 4),
         Pos(3, 2),
         Pos(4, 5)
     )
 
-    // setting traps
     traps.forEach { pos ->
         val index = pos.r * cols + pos.c
         tiles[index] = Tile(pos, TileType.TRAP)
     }
 
-    // exit in the lower right corner
     val exitPos = Pos(rows - 1, cols - 1)
     val exitIndex = exitPos.r * cols + exitPos.c
     tiles[exitIndex] = Tile(exitPos, TileType.EXIT)

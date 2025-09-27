@@ -405,15 +405,15 @@ fun MapCanvas(
     }
 }
 
-private fun nextType(current: TileType): TileType = when (current) {
+internal fun nextType(current: TileType): TileType = when (current) {
     TileType.EMPTY -> TileType.TRAP
     TileType.TRAP -> TileType.EXIT
     TileType.EXIT -> TileType.EMPTY
 }
 
-private fun areNeighbors(a: Pos, b: Pos): Boolean = a.manhattan(b) == 1
+internal fun areNeighbors(a: Pos, b: Pos): Boolean = a.manhattan(b) == 1
 
-private fun toggleWall(set: Set<Pair<Pos, Pos>>, a: Pos, b: Pos): Set<Pair<Pos, Pos>> {
+internal fun toggleWall(set: Set<Pair<Pos, Pos>>, a: Pos, b: Pos): Set<Pair<Pos, Pos>> {
     val pair = a to b
     val reverse = b to a
     return if (pair in set || reverse in set) set.filterNot { it == pair || it == reverse }.toSet()
