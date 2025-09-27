@@ -6,7 +6,6 @@ import com.example.wappo_game.domain.createDefaultGameState
 import org.junit.Rule
 import org.junit.Test
 
-// It runs on the Medium Phone API 36.0 emulator.
 class MenuScreenTest {
 
     @get:Rule

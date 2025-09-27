@@ -216,7 +216,6 @@ fun BoardView(state: GameState, modifier: Modifier = Modifier) {
                 }
             }
 
-            // Walls drawn on Canvas (px)
             Canvas(modifier = Modifier.matchParentSize()) {
                 val stroke = (cellSizePx * 0.1f).coerceAtLeast(6f)
                 for ((a, b) in state.walls) {
@@ -247,7 +246,6 @@ fun BoardView(state: GameState, modifier: Modifier = Modifier) {
             val playerSize = cellSizeDp * (1f - paddingFactor)
             val enemySize = cellSizeDp * (1f - paddingFactor)
 
-            // Player (animated)
             Box(
                 modifier = Modifier
                     .offset(
@@ -261,7 +259,6 @@ fun BoardView(state: GameState, modifier: Modifier = Modifier) {
                 Text("P", fontSize = (cellSizeDp / 3).value.sp, textAlign = TextAlign.Center)
             }
 
-            // Enemy (animated)
             Box(
                 modifier = Modifier
                     .offset(

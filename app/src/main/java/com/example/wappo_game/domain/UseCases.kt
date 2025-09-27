@@ -30,16 +30,9 @@ fun movePlayer(state: GameState, to: Pos): GameState {
     )
 }
 
-/**
- * Enemy's move: takes up to 2 steps towards the player.
- * The enemy does NOT go around the walls — when it collides with the wall, it stops.
- * If an enemy steps on a TRAP, it gets enemyFrozenTurns = 3.
- * If the enemy is frozen (enemyFrozenTurns > 0) — lowers the counter and returns the turn to the player.
- */
 fun stepTowardPlayerWithPriority(state: GameState, from: Pos): Pos {
     val player = state.playerPos
 
-    // Horizontal priority
     val horizStep = when {
         player.c < from.c -> Pos(from.r, from.c - 1)
         player.c > from.c -> Pos(from.r, from.c + 1)
@@ -50,7 +43,6 @@ fun stepTowardPlayerWithPriority(state: GameState, from: Pos): Pos {
         return horizStep
     }
 
-    // Vertical step, if the horizontal step is blocked or not needed.
     val vertStep = when {
         player.r < from.r -> Pos(from.r - 1, from.c)
         player.r > from.r -> Pos(from.r + 1, from.c)

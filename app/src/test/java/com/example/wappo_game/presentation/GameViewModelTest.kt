@@ -82,7 +82,6 @@ class GameViewModelTest {
             _lastMapState.value = state
         }
 
-        // ✅ Добавляем эти методы для теста MapsScreen
         fun deleteMap(name: String) = kotlinx.coroutines.runBlocking {
             dataStore.deleteMap(name)
         }

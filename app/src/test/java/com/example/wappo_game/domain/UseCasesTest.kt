@@ -15,14 +15,14 @@ class UseCasesTest {
     @Test
     fun `player cannot move more than 1 cell`() {
         val state = createDefaultGameState()
-        val newState = movePlayer(state, Pos(0, 2)) // прыжок на 2 вправо
+        val newState = movePlayer(state, Pos(0, 2))
         assertThat(newState).isEqualTo(state)
     }
 
     @Test
     fun `player cannot move through wall`() {
         val state = createDefaultGameState()
-        val blockedTo = Pos(0, 1) // справа стоит стена
+        val blockedTo = Pos(0, 1)
         val newState = movePlayer(state, blockedTo)
         assertThat(newState).isEqualTo(state)
     }
@@ -77,7 +77,7 @@ class UseCasesTest {
         val state = createDefaultGameState().copy(
             playerPos = Pos(1, 2),
             enemyPos = Pos(0, 2),
-            walls = setOf(Pos(0, 2) to Pos(0, 1)) // блок слева
+            walls = setOf(Pos(0, 2) to Pos(0, 1))
         )
         val next = stepTowardPlayerWithPriority(state, state.enemyPos)
         assertThat(next).isEqualTo(Pos(1, 2))

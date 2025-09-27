@@ -30,7 +30,6 @@ fun BoardPreview(state: GameState, sizeDp: Dp) {
         val cellSize = sizeDp / state.cols
 
         Box(modifier = Modifier.fillMaxSize()) {
-            // Grid tiles
             Column(modifier = Modifier.fillMaxSize()) {
                 for (r in 0 until state.rows) {
                     Row(modifier = Modifier.height(cellSize)) {
@@ -85,7 +84,6 @@ fun BoardPreview(state: GameState, sizeDp: Dp) {
                 }
             }
 
-            // Walls
             Canvas(modifier = Modifier.matchParentSize()) {
                 val stroke = (cellSize.toPx() * 0.1f).coerceAtLeast(2f)
                 for ((a, b) in state.walls) {
