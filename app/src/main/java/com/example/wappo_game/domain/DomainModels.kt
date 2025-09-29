@@ -23,19 +23,18 @@ data class GameState(
     val cols: Int = 6,
     val tiles: List<Tile>,
     val playerPos: Pos,
-    val enemyPos: Pos,
+    val enemyPositions: List<Pos> = listOf(Pos(rows - 1, 0)),
     val walls: Set<Pair<Pos, Pos>> = emptySet(),
-    val enemyFrozenTurns: Int = 0,
+    val enemyFrozenTurns: List<Int> = enemyPositions.map { 0 },
     val turn: Turn = Turn.PLAYER,
     @Transient val result: GameResult = GameResult.Ongoing,
     val playerMoves: Int = 0,
     val name: String = "Custom Map",
     val initialPlayerPos: Pos = playerPos,
-    val initialEnemyPos: Pos = enemyPos
+    val initialEnemyPositions: List<Pos> = enemyPositions
 ) {
     fun tileAt(p: Pos): Tile? = tiles.find { it.pos == p }
     fun inBounds(p: Pos) = p.r in 0 until rows && p.c in 0 until cols
-
     fun isBlocked(a: Pos, b: Pos): Boolean = (a to b) in walls || (b to a) in walls
 }
 
@@ -47,7 +46,7 @@ fun createLevel(
     exit: Pos = Pos(rows - 1, cols - 1),
     walls: Set<Pair<Pos, Pos>> = emptySet(),
     playerPos: Pos = Pos(0, 0),
-    enemyPos: Pos = Pos(rows - 1, 0)
+    enemyPositions: List<Pos> = listOf(Pos(rows - 1, 0))
 ): GameState {
     val tiles = List(rows * cols) { idx ->
         val r = idx / cols
@@ -68,10 +67,10 @@ fun createLevel(
         cols = cols,
         tiles = tiles,
         playerPos = playerPos,
-        enemyPos = enemyPos,
+        enemyPositions = enemyPositions,
         walls = walls,
         name = name,
         initialPlayerPos = playerPos,
-        initialEnemyPos = enemyPos
+        initialEnemyPositions = enemyPositions
     )
 }

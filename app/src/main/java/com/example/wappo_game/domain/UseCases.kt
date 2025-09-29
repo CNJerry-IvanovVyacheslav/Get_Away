@@ -1,32 +1,22 @@
 package com.example.wappo_game.domain
 
-
 fun movePlayer(state: GameState, to: Pos): GameState {
     if (state.result != GameResult.Ongoing) return state
-
     if (!state.inBounds(to)) return state
     if (state.isBlocked(state.playerPos, to)) return state
     if (state.playerPos.manhattan(to) != 1) return state
 
     val newState = state.copy(playerPos = to)
 
-    if (newState.playerPos == newState.enemyPos) {
-        return newState.copy(result = GameResult.PlayerLost)
-    }
+    if (newState.enemyPositions.contains(to)) return newState.copy(result = GameResult.PlayerLost)
+    if (newState.tileAt(to)?.type == TileType.TRAP) return newState.copy(result = GameResult.PlayerLost)
+    if (newState.tileAt(to)?.type == TileType.EXIT) return newState.copy(result = GameResult.PlayerWon)
 
-    if (newState.tileAt(to)?.type == TileType.TRAP) {
-        return newState.copy(result = GameResult.PlayerLost)
-    }
-
-    if (newState.tileAt(to)?.type == TileType.EXIT) {
-        return newState.copy(result = GameResult.PlayerWon)
-    }
-
-    val frozen = (newState.enemyFrozenTurns - 1).coerceAtLeast(0)
+    val newFrozen = newState.enemyFrozenTurns.map { (it - 1).coerceAtLeast(0) }
 
     return newState.copy(
-        enemyFrozenTurns = frozen,
-        turn = if (frozen > 0) Turn.PLAYER else Turn.ENEMY
+        enemyFrozenTurns = newFrozen,
+        turn = Turn.ENEMY
     )
 }
 
@@ -39,9 +29,7 @@ fun stepTowardPlayerWithPriority(state: GameState, from: Pos): Pos {
         else -> null
     }
 
-    if (horizStep != null && state.inBounds(horizStep) && !state.isBlocked(from, horizStep)) {
-        return horizStep
-    }
+    if (horizStep != null && state.inBounds(horizStep) && !state.isBlocked(from, horizStep)) return horizStep
 
     val vertStep = when {
         player.r < from.r -> Pos(from.r - 1, from.c)
@@ -49,29 +37,25 @@ fun stepTowardPlayerWithPriority(state: GameState, from: Pos): Pos {
         else -> null
     }
 
-    if (vertStep != null && state.inBounds(vertStep) && !state.isBlocked(from, vertStep)) {
-        return vertStep
-    }
+    if (vertStep != null && state.inBounds(vertStep) && !state.isBlocked(from, vertStep)) return vertStep
 
     return from
 }
 
-
-fun enemyPath(state: GameState): List<Pos> {
-    if (state.enemyFrozenTurns > 0 || state.result != GameResult.Ongoing) return emptyList()
-
-    var cur = state.enemyPos
-    val steps = mutableListOf<Pos>()
-
-    repeat(2) {
-        val next = stepTowardPlayerWithPriority(state, cur)
-        if (next == cur || !state.inBounds(next) || state.isBlocked(cur, next)) return steps
-
-        steps.add(next)
-        cur = next
-
-        if (state.tileAt(cur)?.type == TileType.TRAP) return steps
+fun enemyPaths(state: GameState): List<List<Pos>> {
+    return state.enemyPositions.mapIndexed { idx, pos ->
+        if (state.enemyFrozenTurns.getOrElse(idx) { 0 } > 0 || state.result != GameResult.Ongoing) {
+            emptyList()
+        } else {
+            val steps = mutableListOf<Pos>()
+            var cur = pos
+            repeat(2) {
+                val next = stepTowardPlayerWithPriority(state.copy(enemyPositions = state.enemyPositions), cur)
+                if (next == cur || !state.inBounds(next) || state.isBlocked(cur, next)) return@repeat
+                steps.add(next)
+                cur = next
+            }
+            steps
+        }
     }
-
-    return steps
 }

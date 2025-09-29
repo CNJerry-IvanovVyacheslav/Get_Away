@@ -135,8 +135,14 @@ fun BoardView(state: GameState, modifier: Modifier = Modifier) {
 
         val playerX by animateDpAsState(targetValue = cellSizeDp * state.playerPos.c)
         val playerY by animateDpAsState(targetValue = cellSizeDp * state.playerPos.r)
-        val enemyX by animateDpAsState(targetValue = cellSizeDp * state.enemyPos.c)
-        val enemyY by animateDpAsState(targetValue = cellSizeDp * state.enemyPos.r)
+
+        val enemies = if (state.enemyPositions.isEmpty()) listOf(Pos(state.rows - 1, 0)) else state.enemyPositions
+
+        val enemyOffsets = enemies.map { pos ->
+            val x by animateDpAsState(targetValue = cellSizeDp * pos.c)
+            val y by animateDpAsState(targetValue = cellSizeDp * pos.r)
+            x to y
+        }
 
         Box(modifier = Modifier.size(boardSize)) {
             Column(modifier = Modifier.fillMaxSize()) {
@@ -197,13 +203,15 @@ fun BoardView(state: GameState, modifier: Modifier = Modifier) {
                 contentAlignment = Alignment.Center
             ) { Text("P", fontSize = (cellSizeDp / 3).value.sp, textAlign = TextAlign.Center) }
 
-            Box(
-                modifier = Modifier
-                    .offset(x = enemyX + (cellSizeDp - enemySize) / 2, y = enemyY + (cellSizeDp - enemySize) / 2)
-                    .size(enemySize)
-                    .background(Color(0xFFF44336), RoundedCornerShape(6.dp)),
-                contentAlignment = Alignment.Center
-            ) { Text("E", fontSize = (cellSizeDp / 3).value.sp, textAlign = TextAlign.Center) }
+            enemyOffsets.forEach { (ex, ey) ->
+                Box(
+                    modifier = Modifier
+                        .offset(x = ex + (cellSizeDp - enemySize) / 2, y = ey + (cellSizeDp - enemySize) / 2)
+                        .size(enemySize)
+                        .background(Color(0xFFF44336), RoundedCornerShape(6.dp)),
+                    contentAlignment = Alignment.Center
+                ) { Text("E", fontSize = (cellSizeDp / 3).value.sp, textAlign = TextAlign.Center) }
+            }
         }
     }
 }

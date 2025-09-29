@@ -42,26 +42,19 @@ class GameViewModel(app: Application) : AndroidViewModel(app) {
             _unlockedLevels.value = savedProgress
 
             val lastName = dataStore.loadLastMapName().firstOrNull()
-            val maps = dataStore.loadMaps().firstOrNull() ?: emptyList()
-
             val lastIndex = LevelRepository.levels.indexOfFirst { it.name == lastName }
-
             val chosenIndex = when {
                 lastIndex in 0 until _unlockedLevels.value -> lastIndex
                 else -> _unlockedLevels.value - 1
             }
 
-            val chosenMap = LevelRepository.levels.getOrNull(chosenIndex)
-                ?: LevelRepository.levels.first()
-
+            val chosenMap = LevelRepository.levels.getOrNull(chosenIndex) ?: LevelRepository.levels.first()
             currentMap = chosenMap
             loadCustomMap(chosenMap, saveLast = false)
             _lastMapState.value = chosenMap
         }
 
-        viewModelScope.launch {
-            for (action in actionChannel) action()
-        }
+        viewModelScope.launch { for (action in actionChannel) action() }
     }
 
     private fun enqueue(action: suspend () -> Unit) {
@@ -88,7 +81,7 @@ class GameViewModel(app: Application) : AndroidViewModel(app) {
             }
 
             if (afterPlayer.turn == Turn.ENEMY && afterPlayer.result is GameResult.Ongoing) {
-                moveEnemyStepByStep(afterPlayer)
+                moveEnemiesStepByStep(afterPlayer)
             }
 
             if (afterPlayer.result is GameResult.PlayerWon) {
@@ -105,11 +98,11 @@ class GameViewModel(app: Application) : AndroidViewModel(app) {
     fun loadCustomMap(level: GameState, saveLast: Boolean = true) {
         val resetState = level.copy(
             playerPos = level.initialPlayerPos,
-            enemyPos = level.initialEnemyPos,
+            enemyPositions = level.initialEnemyPositions,
             tiles = level.tiles.map { it.copy() },
             playerMoves = 0,
             result = GameResult.Ongoing,
-            enemyFrozenTurns = 0,
+            enemyFrozenTurns = level.enemyPositions.map { 0 },
             turn = Turn.PLAYER
         )
         currentMap = level
@@ -119,21 +112,21 @@ class GameViewModel(app: Application) : AndroidViewModel(app) {
 
         _currentLevelIndex = LevelRepository.levels.indexOfFirst { it.name == level.name }
 
-        if (saveLast) {
-            viewModelScope.launch { dataStore.saveLastMapName(level.name) }
-        }
+        if (saveLast) viewModelScope.launch { dataStore.saveLastMapName(level.name) }
     }
 
     private fun getNextLevel(level: GameState): GameState? {
         val currentIndex = LevelRepository.levels.indexOfFirst { it.name == level.name }
-        return if (currentIndex != -1 && currentIndex + 1 < LevelRepository.levels.size) {
+        return if (currentIndex != -1 && currentIndex + 1 < LevelRepository.levels.size)
             LevelRepository.levels[currentIndex + 1]
-        } else null
+        else null
     }
 
     private fun unlockNextLevel(currentLevelName: String) {
         val currentIndex = LevelRepository.levels.indexOfFirst { it.name == currentLevelName }
-        if (currentIndex != -1 && currentIndex + 1 < LevelRepository.levels.size) {
+        if (currentIndex == -1) return
+
+        if (currentIndex + 1 < LevelRepository.levels.size) {
             val nextIndex = currentIndex + 1
             if (_unlockedLevels.value <= nextIndex) {
                 _unlockedLevels.value = nextIndex + 1
@@ -144,50 +137,62 @@ class GameViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun resetGame() = loadCustomMap(currentMap)
-
     fun saveCustomMap(level: GameState) = viewModelScope.launch { dataStore.saveOrUpdateMap(level) }
     fun deleteMap(name: String) = viewModelScope.launch { dataStore.deleteMap(name) }
     fun clearAllMaps() = viewModelScope.launch { dataStore.clearMaps() }
 
-    private fun moveEnemyStepByStep(afterPlayer: GameState) {
+    private fun moveEnemiesStepByStep(afterPlayer: GameState) {
         enqueue {
             if (afterPlayer.result != GameResult.Ongoing) return@enqueue
-            val path = enemyPath(afterPlayer)
+
             var curState = afterPlayer
 
-            for ((i, step) in path.withIndex()) {
-                delay(100)
-                if (curState.result != GameResult.Ongoing) return@enqueue
+            enemyPaths(curState).forEachIndexed { idx, path ->
+                val enemyPositions = curState.enemyPositions.toMutableList()
+                val frozenTurns = curState.enemyFrozenTurns.toMutableList()
+                var stopped = false
 
-                curState = curState.copy(enemyPos = step)
+                path.forEach { step ->
+                    if (stopped) return@forEach
 
-                if (curState.tileAt(step)?.type == TileType.TRAP) {
-                    curState = curState.copy(enemyFrozenTurns = 4, turn = Turn.PLAYER)
-                    repo.setState(curState)
+                    delay(100)
 
-                    enqueue {
-                        delay(100)
-                        val newTiles = curState.tiles.map {
-                            if (it.pos == step) it.copy(type = TileType.EMPTY) else it
-                        }
-                        repo.setState(curState.copy(tiles = newTiles))
+                    if (frozenTurns[idx] > 0) return@forEach
+
+                    enemyPositions[idx] = step
+
+                    if (curState.tileAt(step)?.type == TileType.TRAP) {
+                        frozenTurns[idx] = 3
+                        stopped = true
+                        return@forEach
                     }
-                    return@enqueue
-                }
 
-                if (step == curState.playerPos) {
-                    curState = curState.copy(result = GameResult.PlayerLost)
+                    if (step == curState.playerPos) {
+                        curState = curState.copy(
+                            enemyPositions = enemyPositions.toList(),
+                            enemyFrozenTurns = frozenTurns.toList(),
+                            result = GameResult.PlayerLost
+                        )
+                        repo.setState(curState)
+                        return@enqueue
+                    }
+
+                    curState = curState.copy(
+                        enemyPositions = enemyPositions.toList(),
+                        enemyFrozenTurns = frozenTurns.toList()
+                    )
                     repo.setState(curState)
-                    return@enqueue
                 }
 
-                repo.setState(curState)
-
-                if (i == path.lastIndex) {
-                    curState = curState.copy(turn = Turn.PLAYER)
-                    repo.setState(curState)
-                }
+                curState = curState.copy(
+                    enemyPositions = enemyPositions.toList(),
+                    enemyFrozenTurns = frozenTurns.toList()
+                )
             }
+
+            curState = curState.copy(turn = Turn.PLAYER)
+            repo.setState(curState)
         }
     }
+
 }
