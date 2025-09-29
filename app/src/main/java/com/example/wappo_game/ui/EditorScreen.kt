@@ -48,7 +48,8 @@ fun EditorScreen(
     var walls by remember { mutableStateOf(initialState?.walls ?: emptySet()) }
     var selectedCell by remember { mutableStateOf<Pos?>(null) }
     var playerStart by remember { mutableStateOf(initialState?.playerPos ?: Pos(0, 0)) }
-    var enemyStart by remember { mutableStateOf(initialState?.enemyPos ?: Pos(0, cols - 1)) }
+    var enemyPositions by remember { mutableStateOf(initialState?.enemyPositions ?: emptyList()) }
+
     var mode by remember { mutableStateOf(EditorMode.TILES) }
     var mapName by remember { mutableStateOf(initialState?.name ?: "") }
 
@@ -70,28 +71,16 @@ fun EditorScreen(
 
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     Button(onClick = { mode = EditorMode.TILES }) {
-                        Text(
-                            "Tiles",
-                            fontSize = 12.sp
-                        )
+                        Text("Tiles", fontSize = 12.sp)
                     }
                     Button(onClick = { mode = EditorMode.WALLS }) {
-                        Text(
-                            "Walls",
-                            fontSize = 12.sp
-                        )
+                        Text("Walls", fontSize = 12.sp)
                     }
                     Button(onClick = { mode = EditorMode.PLAYER_START }) {
-                        Text(
-                            "Set Player",
-                            fontSize = 11.sp
-                        )
+                        Text("Set Player", fontSize = 11.sp)
                     }
                     Button(onClick = { mode = EditorMode.ENEMY_START }) {
-                        Text(
-                            "Set Enemy",
-                            fontSize = 10.sp
-                        )
+                        Text("Set Enemy", fontSize = 10.sp)
                     }
                 }
 
@@ -112,7 +101,7 @@ fun EditorScreen(
                     tilesGrid = tilesGrid,
                     walls = walls,
                     playerStart = playerStart,
-                    enemyStart = enemyStart,
+                    enemyPositions = enemyPositions,
                     mode = mode,
                     onTileClick = { r, c ->
                         val pos = Pos(r, c)
@@ -138,7 +127,13 @@ fun EditorScreen(
                             }
 
                             EditorMode.PLAYER_START -> playerStart = pos
-                            EditorMode.ENEMY_START -> enemyStart = pos
+                            EditorMode.ENEMY_START -> {
+                                if (pos in enemyPositions) {
+                                    enemyPositions = enemyPositions.filter { it != pos }
+                                } else {
+                                    enemyPositions = enemyPositions + pos
+                                }
+                            }
                         }
                     }
                 )
@@ -157,9 +152,9 @@ fun EditorScreen(
                             cols = cols,
                             tiles = tilesList,
                             playerPos = playerStart,
-                            enemyPos = enemyStart,
+                            enemyPositions = enemyPositions,
                             walls = walls,
-                            enemyFrozenTurns = 0,
+                            enemyFrozenTurns = List(enemyPositions.size) { 0 },
                             turn = Turn.PLAYER,
                             result = GameResult.Ongoing,
                             playerMoves = 0,
@@ -175,7 +170,6 @@ fun EditorScreen(
                         }
 
                         viewModel.saveCustomMap(resultState)
-
                         onGoToMenu()
                     }) {
                         Text("Save")
@@ -202,30 +196,10 @@ fun EditorScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Button(onClick = { mode = EditorMode.TILES }) {
-                        Text(
-                            "Tiles",
-                            fontSize = 12.sp
-                        )
-                    }
-                    Button(onClick = { mode = EditorMode.WALLS }) {
-                        Text(
-                            "Walls",
-                            fontSize = 12.sp
-                        )
-                    }
-                    Button(onClick = { mode = EditorMode.PLAYER_START }) {
-                        Text(
-                            "Set Player",
-                            fontSize = 11.sp
-                        )
-                    }
-                    Button(onClick = { mode = EditorMode.ENEMY_START }) {
-                        Text(
-                            "Set Enemy",
-                            fontSize = 10.sp
-                        )
-                    }
+                    Button(onClick = { mode = EditorMode.TILES }) { Text("Tiles", fontSize = 12.sp) }
+                    Button(onClick = { mode = EditorMode.WALLS }) { Text("Walls", fontSize = 12.sp) }
+                    Button(onClick = { mode = EditorMode.PLAYER_START }) { Text("Set Player", fontSize = 11.sp) }
+                    Button(onClick = { mode = EditorMode.ENEMY_START }) { Text("Set Enemy", fontSize = 10.sp) }
                 }
 
                 Spacer(modifier = Modifier.weight(1f))
@@ -235,7 +209,7 @@ fun EditorScreen(
                         tilesGrid = tilesGrid,
                         walls = walls,
                         playerStart = playerStart,
-                        enemyStart = enemyStart,
+                        enemyPositions = enemyPositions,
                         mode = mode,
                         onTileClick = { r, c ->
                             val pos = Pos(r, c)
@@ -261,7 +235,13 @@ fun EditorScreen(
                                 }
 
                                 EditorMode.PLAYER_START -> playerStart = pos
-                                EditorMode.ENEMY_START -> enemyStart = pos
+                                EditorMode.ENEMY_START -> {
+                                    if (pos in enemyPositions) {
+                                        enemyPositions = enemyPositions.filter { it != pos }
+                                    } else {
+                                        enemyPositions = enemyPositions + pos
+                                    }
+                                }
                             }
                         }
                     )
@@ -274,7 +254,6 @@ fun EditorScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text("Map Editor", fontSize = 20.sp)
-
                     OutlinedTextField(
                         value = mapName,
                         onValueChange = { mapName = it },
@@ -291,9 +270,9 @@ fun EditorScreen(
                                 cols = cols,
                                 tiles = tilesList,
                                 playerPos = playerStart,
-                                enemyPos = enemyStart,
+                                enemyPositions = enemyPositions,
                                 walls = walls,
-                                enemyFrozenTurns = 0,
+                                enemyFrozenTurns = List(enemyPositions.size) { 0 },
                                 turn = Turn.PLAYER,
                                 result = GameResult.Ongoing,
                                 playerMoves = 0,
@@ -329,7 +308,7 @@ fun MapCanvas(
     tilesGrid: List<List<Tile>>,
     walls: Set<Pair<Pos, Pos>>,
     playerStart: Pos,
-    enemyStart: Pos,
+    enemyPositions: List<Pos>,
     mode: EditorMode,
     onTileClick: (r: Int, c: Int) -> Unit
 ) {
@@ -348,9 +327,10 @@ fun MapCanvas(
 
                         val borderColor = when {
                             playerStart == Pos(r, c) -> Color(0xFF1B5E20)
-                            enemyStart == Pos(r, c) -> Color(0xFFB71C1C)
+                            Pos(r, c) in enemyPositions -> Color(0xFFB71C1C)
                             else -> Color.Transparent
                         }
+
                         val borderWidth = if (borderColor != Color.Transparent) 3.dp else 0.dp
 
                         Box(
@@ -364,7 +344,7 @@ fun MapCanvas(
                         ) {
                             when {
                                 playerStart == Pos(r, c) -> Text("P", color = Color.White)
-                                enemyStart == Pos(r, c) -> Text("E", color = Color.White)
+                                Pos(r, c) in enemyPositions -> Text("E", color = Color.White)
                                 tile.type == TileType.TRAP -> Text("T", color = Color.White)
                                 tile.type == TileType.EXIT -> Text("Exit")
                             }

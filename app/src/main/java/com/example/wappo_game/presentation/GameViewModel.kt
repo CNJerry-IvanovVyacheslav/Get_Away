@@ -5,53 +5,56 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.wappo_game.data.DataStoreManager
 import com.example.wappo_game.data.InMemoryGameRepository
+import com.example.wappo_game.data.LevelRepository
 import com.example.wappo_game.domain.*
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 
 class GameViewModel(app: Application) : AndroidViewModel(app) {
 
-    private val repo = InMemoryGameRepository(createDefaultGameState())
+    private val repo = InMemoryGameRepository(LevelRepository.levels.first())
     private val dataStore = DataStoreManager(app)
 
     val state: StateFlow<GameState> = repo.state
     val savedMaps: StateFlow<List<GameState>> =
         dataStore.loadMaps().stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
-    private lateinit var currentMap: GameState
     private val _lastMapState = MutableStateFlow<GameState?>(null)
     val lastMapState: StateFlow<GameState?> = _lastMapState
 
-    private val actionChannel = Channel<suspend () -> Unit>(capacity = Channel.UNLIMITED)
+    private val _unlockedLevels = MutableStateFlow(1)
+    val unlockedLevels: StateFlow<Int> = _unlockedLevels
+
+    private var _currentLevelIndex: Int = 0
+    val currentLevelIndex: Int get() = _currentLevelIndex
+
+    private val actionChannel = Channel<suspend () -> Unit>(Channel.UNLIMITED)
+    private lateinit var currentMap: GameState
+
+    private val _nextLevel = MutableStateFlow<GameState?>(null)
+    val nextLevel: StateFlow<GameState?> = _nextLevel
 
     init {
         viewModelScope.launch {
-            for (action in actionChannel) {
-                action()
+            val savedProgress = dataStore.loadUnlockedLevels().firstOrNull() ?: 1
+            _unlockedLevels.value = savedProgress
+
+            val lastName = dataStore.loadLastMapName().firstOrNull()
+            val lastIndex = LevelRepository.levels.indexOfFirst { it.name == lastName }
+            val chosenIndex = when {
+                lastIndex in 0 until _unlockedLevels.value -> lastIndex
+                else -> _unlockedLevels.value - 1
             }
+
+            val chosenMap = LevelRepository.levels.getOrNull(chosenIndex) ?: LevelRepository.levels.first()
+            currentMap = chosenMap
+            loadCustomMap(chosenMap, saveLast = false)
+            _lastMapState.value = chosenMap
         }
 
-        viewModelScope.launch {
-            try {
-                val lastName = dataStore.loadLastMapName().firstOrNull()
-                val maps = dataStore.loadMaps().firstOrNull() ?: emptyList()
-                val chosenMap = maps.find { it.name == lastName } ?: createDefaultGameState()
-                currentMap = chosenMap
-                loadCustomMap(chosenMap, saveLast = false)
-                _lastMapState.value = chosenMap
-            } catch (t: Throwable) {
-                val defaultMap = createDefaultGameState()
-                currentMap = defaultMap
-                loadCustomMap(defaultMap, saveLast = false)
-                _lastMapState.value = defaultMap
-            }
-        }
+        viewModelScope.launch { for (action in actionChannel) action() }
     }
 
     private fun enqueue(action: suspend () -> Unit) {
@@ -60,7 +63,7 @@ class GameViewModel(app: Application) : AndroidViewModel(app) {
 
     private fun tryMovePlayer(to: Pos) {
         enqueue {
-            val cur = repo.state.value
+            val cur = repo.getState()
             if (cur.result !is GameResult.Ongoing) return@enqueue
 
             val afterPlayer = movePlayer(cur, to).copy(playerMoves = cur.playerMoves + 1)
@@ -78,7 +81,11 @@ class GameViewModel(app: Application) : AndroidViewModel(app) {
             }
 
             if (afterPlayer.turn == Turn.ENEMY && afterPlayer.result is GameResult.Ongoing) {
-                moveEnemyStepByStep(afterPlayer)
+                moveEnemiesStepByStep(afterPlayer)
+            }
+
+            if (afterPlayer.result is GameResult.PlayerWon) {
+                unlockNextLevel(afterPlayer.name)
             }
         }
     }
@@ -88,71 +95,104 @@ class GameViewModel(app: Application) : AndroidViewModel(app) {
     fun moveLeft() = tryMovePlayer(Pos(state.value.playerPos.r, state.value.playerPos.c - 1))
     fun moveRight() = tryMovePlayer(Pos(state.value.playerPos.r, state.value.playerPos.c + 1))
 
-    fun loadCustomMap(state: GameState, saveLast: Boolean = true) {
-        val resetState = state.copy(
-            playerPos = state.initialPlayerPos,
-            enemyPos = state.initialEnemyPos,
-            tiles = state.tiles.map { it.copy() },
+    fun loadCustomMap(level: GameState, saveLast: Boolean = true) {
+        val resetState = level.copy(
+            playerPos = level.initialPlayerPos,
+            enemyPositions = level.initialEnemyPositions,
+            tiles = level.tiles.map { it.copy() },
             playerMoves = 0,
             result = GameResult.Ongoing,
-            enemyFrozenTurns = 0,
+            enemyFrozenTurns = level.enemyPositions.map { 0 },
             turn = Turn.PLAYER
         )
-        currentMap = state
+        currentMap = level
         repo.setState(resetState)
+        _lastMapState.value = level
+        _nextLevel.value = getNextLevel(level)
 
-        _lastMapState.value = state
-        if (saveLast) {
-            viewModelScope.launch { dataStore.saveLastMapName(state.name) }
-        }
+        _currentLevelIndex = LevelRepository.levels.indexOfFirst { it.name == level.name }
+
+        if (saveLast) viewModelScope.launch { dataStore.saveLastMapName(level.name) }
     }
 
-    fun saveCustomMap(state: GameState) = viewModelScope.launch {
-        dataStore.saveOrUpdateMap(state)
+    private fun getNextLevel(level: GameState): GameState? {
+        val currentIndex = LevelRepository.levels.indexOfFirst { it.name == level.name }
+        return if (currentIndex != -1 && currentIndex + 1 < LevelRepository.levels.size)
+            LevelRepository.levels[currentIndex + 1]
+        else null
     }
-    fun deleteMap(name: String) = viewModelScope.launch { dataStore.deleteMap(name) }
-    fun resetGame() = loadCustomMap(currentMap)
-    fun clearAllMaps() = viewModelScope.launch { dataStore.clearMaps() }
 
-    private fun moveEnemyStepByStep(afterPlayer: GameState) {
-        enqueue {
-            if (afterPlayer.result != GameResult.Ongoing) return@enqueue
-            val path = enemyPath(afterPlayer)
-            var curState = afterPlayer
+    private fun unlockNextLevel(currentLevelName: String) {
+        val currentIndex = LevelRepository.levels.indexOfFirst { it.name == currentLevelName }
+        if (currentIndex == -1) return
 
-            for ((i, step) in path.withIndex()) {
-                delay(100)
-                if (curState.result != GameResult.Ongoing) return@enqueue
-
-                curState = curState.copy(enemyPos = step)
-
-                if (curState.tileAt(step)?.type == TileType.TRAP) {
-                    curState = curState.copy(enemyFrozenTurns = 3, turn = Turn.PLAYER)
-                    repo.setState(curState)
-
-                    enqueue {
-                        delay(100)
-                        val newTiles = curState.tiles.map {
-                            if (it.pos == step) it.copy(type = TileType.EMPTY) else it
-                        }
-                        repo.setState(curState.copy(tiles = newTiles))
-                    }
-                    return@enqueue
-                }
-
-                if (step == curState.playerPos) {
-                    curState = curState.copy(result = GameResult.PlayerLost)
-                    repo.setState(curState)
-                    return@enqueue
-                }
-
-                repo.setState(curState)
-
-                if (i == path.lastIndex) {
-                    curState = curState.copy(turn = Turn.PLAYER)
-                    repo.setState(curState)
-                }
+        if (currentIndex + 1 < LevelRepository.levels.size) {
+            val nextIndex = currentIndex + 1
+            if (_unlockedLevels.value <= nextIndex) {
+                _unlockedLevels.value = nextIndex + 1
+                viewModelScope.launch { dataStore.saveUnlockedLevels(_unlockedLevels.value) }
             }
         }
+        _nextLevel.value = getNextLevel(LevelRepository.levels[currentIndex])
     }
+
+    fun resetGame() = loadCustomMap(currentMap)
+    fun saveCustomMap(level: GameState) = viewModelScope.launch { dataStore.saveOrUpdateMap(level) }
+    fun deleteMap(name: String) = viewModelScope.launch { dataStore.deleteMap(name) }
+    fun clearAllMaps() = viewModelScope.launch { dataStore.clearMaps() }
+
+    private fun moveEnemiesStepByStep(afterPlayer: GameState) {
+        enqueue {
+            if (afterPlayer.result != GameResult.Ongoing) return@enqueue
+
+            var curState = afterPlayer
+
+            enemyPaths(curState).forEachIndexed { idx, path ->
+                val enemyPositions = curState.enemyPositions.toMutableList()
+                val frozenTurns = curState.enemyFrozenTurns.toMutableList()
+                var stopped = false
+
+                path.forEach { step ->
+                    if (stopped) return@forEach
+
+                    delay(100)
+
+                    if (frozenTurns[idx] > 0) return@forEach
+
+                    enemyPositions[idx] = step
+
+                    if (curState.tileAt(step)?.type == TileType.TRAP) {
+                        frozenTurns[idx] = 3
+                        stopped = true
+                        return@forEach
+                    }
+
+                    if (step == curState.playerPos) {
+                        curState = curState.copy(
+                            enemyPositions = enemyPositions.toList(),
+                            enemyFrozenTurns = frozenTurns.toList(),
+                            result = GameResult.PlayerLost
+                        )
+                        repo.setState(curState)
+                        return@enqueue
+                    }
+
+                    curState = curState.copy(
+                        enemyPositions = enemyPositions.toList(),
+                        enemyFrozenTurns = frozenTurns.toList()
+                    )
+                    repo.setState(curState)
+                }
+
+                curState = curState.copy(
+                    enemyPositions = enemyPositions.toList(),
+                    enemyFrozenTurns = frozenTurns.toList()
+                )
+            }
+
+            curState = curState.copy(turn = Turn.PLAYER)
+            repo.setState(curState)
+        }
+    }
+
 }

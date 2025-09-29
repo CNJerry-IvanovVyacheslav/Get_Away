@@ -1,14 +1,12 @@
 package com.example.wappo_game.ui
 
-import android.annotation.SuppressLint
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -17,13 +15,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.min
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.*
+import com.example.wappo_game.data.LevelRepository
 import com.example.wappo_game.domain.*
 import com.example.wappo_game.presentation.GameViewModel
 import kotlin.math.abs
@@ -31,30 +26,36 @@ import kotlin.math.abs
 @Composable
 fun GameScreen(vm: GameViewModel, onBackToMenu: () -> Unit) {
     val state by vm.state.collectAsState()
+    val unlockedLevels by vm.unlockedLevels.collectAsState()
+    val currentIndex = vm.currentLevelIndex
     val config = LocalConfiguration.current
     val isLandscape = config.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
 
     if (state.result is GameResult.PlayerWon || state.result is GameResult.PlayerLost) {
-        val message = when (state.result) {
-            is GameResult.PlayerWon -> "🎉 Victory!"
-            is GameResult.PlayerLost -> "💀 Defeat!"
-            else -> ""
-        }
+        val message = if (state.result is GameResult.PlayerWon) "🎉 Victory!" else "💀 Defeat!"
 
-        androidx.compose.material3.AlertDialog(
+        AlertDialog(
             onDismissRequest = { },
+            title = { Text(message, fontSize = 22.sp, fontWeight = FontWeight.Bold) },
+            text = { Text("Total moves: ${state.playerMoves}") },
             confirmButton = {
-                Button(onClick = { vm.resetGame() }) {
-                    Text("Restart")
-                }
+                Button(onClick = { vm.resetGame() }) { Text("Restart") }
             },
             dismissButton = {
-                Button(onClick = onBackToMenu) {
-                    Text("Menu")
+                Row {
+                    Button(onClick = onBackToMenu) { Text("Menu") }
+                    if (state.result is GameResult.PlayerWon && currentIndex != null) {
+                        val nextIndex = currentIndex + 1
+                        if (nextIndex < LevelRepository.levels.size) {
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Button(onClick = {
+                                val nextLevel = LevelRepository.levels[nextIndex]
+                                vm.loadCustomMap(nextLevel)
+                            }) { Text("Next Level") }
+                        }
+                    }
                 }
-            },
-            title = { Text(message, fontSize = 22.sp, fontWeight = FontWeight.Bold) },
-            text = { Text("Total moves: ${state.playerMoves}") }
+            }
         )
     }
 
@@ -66,64 +67,26 @@ fun GameScreen(vm: GameViewModel, onBackToMenu: () -> Unit) {
                         .fillMaxWidth()
                         .padding(horizontal = 8.dp, vertical = 12.dp)
                 ) {
-                    Button(
-                        onClick = onBackToMenu,
-                        modifier = Modifier.align(Alignment.CenterStart)
-                    ) { Text("Menu") }
-
-                    Text(
-                        "Moves: ${state.playerMoves}",
-                        modifier = Modifier.align(Alignment.Center),
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-
-                    Button(
-                        onClick = { vm.resetGame() },
-                        modifier = Modifier.align(Alignment.CenterEnd)
-                    ) { Text("Reset") }
+                    Button(onClick = onBackToMenu, modifier = Modifier.align(Alignment.CenterStart)) { Text("Menu") }
+                    Text("Moves: ${state.playerMoves}", modifier = Modifier.align(Alignment.Center), fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    Button(onClick = { vm.resetGame() }, modifier = Modifier.align(Alignment.CenterEnd)) { Text("Reset") }
                 }
-
                 SwipeBoard(state, vm, modifier = Modifier.weight(1f))
             }
         }
     } else {
         Box(modifier = Modifier.fillMaxSize()) {
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
+            Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
                 Spacer(modifier = Modifier.height(64.dp))
-
-                Text(
-                    "Moves: ${state.playerMoves}",
-                    modifier = Modifier.padding(vertical = 16.dp),
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                )
-
+                Text("Moves: ${state.playerMoves}", modifier = Modifier.padding(vertical = 16.dp), fontSize = 24.sp, fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.height(8.dp))
-
                 SwipeBoard(state, vm, modifier = Modifier.weight(1f))
-
                 Spacer(modifier = Modifier.height(8.dp))
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 24.dp),
-                    horizontalArrangement = Arrangement.Center
-                ) {
+                Row(modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp), horizontalArrangement = Arrangement.Center) {
                     Button(onClick = { vm.resetGame() }) { Text("Reset") }
                 }
             }
-
-            Button(
-                onClick = onBackToMenu,
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .padding(8.dp)
-            ) { Text("Menu") }
+            Button(onClick = onBackToMenu, modifier = Modifier.align(Alignment.TopStart).padding(8.dp)) { Text("Menu") }
         }
     }
 }
@@ -136,8 +99,6 @@ internal fun SwipeBoard(state: GameState, vm: GameViewModel, modifier: Modifier 
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(8.dp)
-            .testTag("SwipeBoard")
             .pointerInput(Unit) {
                 detectDragGestures(
                     onDragStart = {
@@ -160,17 +121,13 @@ internal fun SwipeBoard(state: GameState, vm: GameViewModel, modifier: Modifier 
             },
         contentAlignment = Alignment.Center
     ) {
-        BoardView(state = state, modifier = Modifier.fillMaxSize())
+        BoardView(state)
     }
 }
 
-@SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 fun BoardView(state: GameState, modifier: Modifier = Modifier) {
-    BoxWithConstraints(
-        modifier = modifier,
-        contentAlignment = Alignment.Center
-    ) {
+    BoxWithConstraints(modifier = modifier, contentAlignment = Alignment.Center) {
         val boardSize = min(maxWidth, maxHeight)
         val cellSizeDp: Dp = boardSize / state.cols
         val density = LocalDensity.current
@@ -178,8 +135,14 @@ fun BoardView(state: GameState, modifier: Modifier = Modifier) {
 
         val playerX by animateDpAsState(targetValue = cellSizeDp * state.playerPos.c)
         val playerY by animateDpAsState(targetValue = cellSizeDp * state.playerPos.r)
-        val enemyX by animateDpAsState(targetValue = cellSizeDp * state.enemyPos.c)
-        val enemyY by animateDpAsState(targetValue = cellSizeDp * state.enemyPos.r)
+
+        val enemies = if (state.enemyPositions.isEmpty()) listOf(Pos(state.rows - 1, 0)) else state.enemyPositions
+
+        val enemyOffsets = enemies.map { pos ->
+            val x by animateDpAsState(targetValue = cellSizeDp * pos.c)
+            val y by animateDpAsState(targetValue = cellSizeDp * pos.r)
+            x to y
+        }
 
         Box(modifier = Modifier.size(boardSize)) {
             Column(modifier = Modifier.fillMaxSize()) {
@@ -193,7 +156,6 @@ fun BoardView(state: GameState, modifier: Modifier = Modifier) {
                                 TileType.EXIT -> Color(0xFFFFEB3B)
                                 else -> Color(0xFFEEEEEE)
                             }
-
                             Box(
                                 modifier = Modifier
                                     .size(cellSizeDp)
@@ -203,11 +165,7 @@ fun BoardView(state: GameState, modifier: Modifier = Modifier) {
                             ) {
                                 when (tile.type) {
                                     TileType.TRAP -> Text("T", fontSize = (cellSizeDp / 3).value.sp)
-                                    TileType.EXIT -> Text(
-                                        "EXIT",
-                                        fontSize = (cellSizeDp / 6).value.sp
-                                    )
-
+                                    TileType.EXIT -> Text("EXIT", fontSize = (cellSizeDp / 6).value.sp)
                                     else -> {}
                                 }
                             }
@@ -223,53 +181,36 @@ fun BoardView(state: GameState, modifier: Modifier = Modifier) {
                         val rowTop = a.r * cellSizePx
                         val rowBottom = rowTop + cellSizePx
                         val dividerX = maxOf(a.c, b.c) * cellSizePx
-                        drawLine(
-                            Color.Black,
-                            start = Offset(dividerX, rowTop),
-                            end = Offset(dividerX, rowBottom),
-                            strokeWidth = stroke
-                        )
+                        drawLine(Color.Black, start = Offset(dividerX, rowTop), end = Offset(dividerX, rowBottom), strokeWidth = stroke)
                     } else if (a.c == b.c && abs(a.r - b.r) == 1) {
                         val colLeft = a.c * cellSizePx
                         val colRight = colLeft + cellSizePx
                         val dividerY = maxOf(a.r, b.r) * cellSizePx
-                        drawLine(
-                            Color.Black,
-                            start = Offset(colLeft, dividerY),
-                            end = Offset(colRight, dividerY),
-                            strokeWidth = stroke
-                        )
+                        drawLine(Color.Black, start = Offset(colLeft, dividerY), end = Offset(colRight, dividerY), strokeWidth = stroke)
                     }
                 }
             }
+
             val paddingFactor = 0.07f
             val playerSize = cellSizeDp * (1f - paddingFactor)
             val enemySize = cellSizeDp * (1f - paddingFactor)
 
             Box(
                 modifier = Modifier
-                    .offset(
-                        x = playerX + (cellSizeDp - playerSize) / 2,
-                        y = playerY + (cellSizeDp - playerSize) / 2
-                    )
+                    .offset(x = playerX + (cellSizeDp - playerSize) / 2, y = playerY + (cellSizeDp - playerSize) / 2)
                     .size(playerSize)
                     .background(Color(0xFF4CAF50), RoundedCornerShape(6.dp)),
                 contentAlignment = Alignment.Center
-            ) {
-                Text("P", fontSize = (cellSizeDp / 3).value.sp, textAlign = TextAlign.Center)
-            }
+            ) { Text("P", fontSize = (cellSizeDp / 3).value.sp, textAlign = TextAlign.Center) }
 
-            Box(
-                modifier = Modifier
-                    .offset(
-                        x = enemyX + (cellSizeDp - enemySize) / 2,
-                        y = enemyY + (cellSizeDp - enemySize) / 2
-                    )
-                    .size(enemySize)
-                    .background(Color(0xFFF44336), RoundedCornerShape(6.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                Text("E", fontSize = (cellSizeDp / 3).value.sp, textAlign = TextAlign.Center)
+            enemyOffsets.forEach { (ex, ey) ->
+                Box(
+                    modifier = Modifier
+                        .offset(x = ex + (cellSizeDp - enemySize) / 2, y = ey + (cellSizeDp - enemySize) / 2)
+                        .size(enemySize)
+                        .background(Color(0xFFF44336), RoundedCornerShape(6.dp)),
+                    contentAlignment = Alignment.Center
+                ) { Text("E", fontSize = (cellSizeDp / 3).value.sp, textAlign = TextAlign.Center) }
             }
         }
     }

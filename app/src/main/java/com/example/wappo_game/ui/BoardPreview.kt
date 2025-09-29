@@ -5,28 +5,30 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.wappo_game.domain.GameState
 import com.example.wappo_game.domain.Pos
 import com.example.wappo_game.domain.TileType
-import androidx.compose.material3.Text
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.sp
 import kotlin.math.abs
 
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 fun BoardPreview(state: GameState, sizeDp: Dp) {
-    BoxWithConstraints(modifier = Modifier
-        .size(sizeDp)
-        .testTag("BoardPreview")) {
+    BoxWithConstraints(
+        modifier = Modifier
+            .size(sizeDp)
+            .testTag("BoardPreview")
+    ) {
         val cellSize = sizeDp / state.cols
 
         Box(modifier = Modifier.fillMaxSize()) {
@@ -37,7 +39,7 @@ fun BoardPreview(state: GameState, sizeDp: Dp) {
                             val pos = Pos(r, c)
                             val tile = state.tileAt(pos)!!
                             val isPlayer = state.playerPos == pos
-                            val isEnemy = state.enemyPos == pos
+                            val isEnemy = state.enemyPositions.contains(pos)
                             val bg = when {
                                 isPlayer -> Color(0xFF4CAF50)
                                 isEnemy -> Color(0xFFF44336)
@@ -59,23 +61,19 @@ fun BoardPreview(state: GameState, sizeDp: Dp) {
                                         fontSize = (cellSize / 3).value.sp,
                                         textAlign = TextAlign.Center
                                     )
-
                                     isEnemy -> Text(
                                         "E",
                                         fontSize = (cellSize / 3).value.sp,
                                         textAlign = TextAlign.Center
                                     )
-
                                     tile.type == TileType.TRAP -> Text(
                                         "T",
                                         fontSize = (cellSize / 3).value.sp
                                     )
-
                                     tile.type == TileType.EXIT -> Text(
                                         "EXIT",
                                         fontSize = (cellSize / 6).value.sp
                                     )
-
                                     else -> {}
                                 }
                             }
@@ -113,4 +111,3 @@ fun BoardPreview(state: GameState, sizeDp: Dp) {
         }
     }
 }
-
