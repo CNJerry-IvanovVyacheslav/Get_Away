@@ -5,6 +5,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.example.wappo_game.domain.GameState
 import com.google.gson.Gson
@@ -70,8 +71,18 @@ class DataStoreManager(
         }
     }
 
+    suspend fun saveUnlockedLevels(count: Int) {
+        dataStore.edit { prefs ->
+            prefs[UNLOCKED_LEVELS_KEY] = count
+        }
+    }
+
+    fun loadUnlockedLevels(): Flow<Int> = dataStore.data
+        .map { prefs -> prefs[UNLOCKED_LEVELS_KEY] ?: 1 }
+
     private companion object {
         private val MAPS_KEY = stringPreferencesKey("custom_maps")
         private val LAST_MAP_KEY = stringPreferencesKey("last_map")
+        private val UNLOCKED_LEVELS_KEY = intPreferencesKey("unlocked_levels")
     }
 }

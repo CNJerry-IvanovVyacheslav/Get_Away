@@ -14,6 +14,8 @@ import androidx.compose.runtime.getValue
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.wappo_game.data.LevelRepository
+import com.example.wappo_game.presentation.CampaignScreen
 import com.example.wappo_game.presentation.GameViewModel
 import com.example.wappo_game.presentation.MapsScreen
 import com.example.wappo_game.presentation.MenuScreen
@@ -44,16 +46,63 @@ fun AppNavHost(gameViewModel: GameViewModel) {
 
         composable("menu") {
             MenuScreen(
-                onPlayClick = { navController.navigate("game") },
+                vm = gameViewModel,
+                onPlayClick = {
+                    val lastIndex = gameViewModel.unlockedLevels.value - 1
+                    val level = LevelRepository.levels.getOrNull(lastIndex) ?: LevelRepository.levels.first()
+                    gameViewModel.loadCustomMap(level)
+                    navController.navigate("game")
+                },
+                onCampaignClick = {
+                    navController.navigate("campaign_select")
+                },
                 onCreateMapClick = { navController.navigate("create_map") },
-                onExitClick = { activity?.finish() },
                 onMapsClick = { navController.navigate("saved_maps") },
+                onExitClick = { activity?.finish() },
                 previewState = lastMap
             )
         }
 
         composable("game") {
-            GameScreen(vm = gameViewModel, onBackToMenu = { navController.popBackStack() })
+            GameScreen(
+                vm = gameViewModel,
+                onBackToMenu = { navController.popBackStack() }
+            )
+        }
+
+        composable("campaign_select") {
+            CampaignScreen(
+                vm = gameViewModel,
+                onLevelSelected = { level ->
+                    gameViewModel.loadCustomMap(level)
+                    navController.navigate("game")
+                },
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable("game/{levelIndex}") { backStackEntry ->
+            val index = backStackEntry.arguments?.getString("levelIndex")?.toIntOrNull()
+            val level = index?.let { LevelRepository.levels.getOrNull(it) }
+            if (level != null) {
+                gameViewModel.loadCustomMap(level)
+                GameScreen(
+                    vm = gameViewModel,
+                    onBackToMenu = { navController.popBackStack() }
+                )
+            }
+        }
+
+        composable("game/custom/{mapName}") { backStackEntry ->
+            val mapName = backStackEntry.arguments?.getString("mapName")
+            val map = gameViewModel.savedMaps.value.find { it.name == mapName }
+            if (map != null) {
+                gameViewModel.loadCustomMap(map)
+                GameScreen(
+                    vm = gameViewModel,
+                    onBackToMenu = { navController.popBackStack() }
+                )
+            }
         }
 
         composable("create_map") {
@@ -67,7 +116,6 @@ fun AppNavHost(gameViewModel: GameViewModel) {
                 }
             )
         }
-
 
         composable("editor_for_edit/{mapName}") { backStackEntry ->
             val mapName = backStackEntry.arguments?.getString("mapName")
@@ -85,14 +133,12 @@ fun AppNavHost(gameViewModel: GameViewModel) {
             }
         }
 
-
         composable("saved_maps") {
             MapsScreen(
                 viewModel = gameViewModel,
                 onBack = { navController.popBackStack() },
                 onLoadMap = { map ->
-                    gameViewModel.loadCustomMap(map)
-                    navController.popBackStack()
+                    navController.navigate("game/custom/${map.name}")
                 },
                 onEditMap = { map ->
                     navController.navigate("editor_for_edit/${map.name}")
