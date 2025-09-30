@@ -1,7 +1,12 @@
 package com.example.wappo_game.ui
 
+import android.content.Context
+import android.media.MediaPlayer
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
@@ -13,11 +18,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.*
+import com.example.wappo_game.R
 import com.example.wappo_game.data.LevelRepository
 import com.example.wappo_game.domain.*
 import com.example.wappo_game.presentation.GameViewModel
@@ -30,6 +38,12 @@ fun GameScreen(vm: GameViewModel, onBackToMenu: () -> Unit) {
     val currentIndex = vm.currentLevelIndex
     val config = LocalConfiguration.current
     val isLandscape = config.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFF17A5EA)) // светло-голубой фон
+    )
 
     if (state.result is GameResult.PlayerWon || state.result is GameResult.PlayerLost) {
         val message = if (state.result is GameResult.PlayerWon) "🎉 Victory!" else "💀 Defeat!"
@@ -67,26 +81,55 @@ fun GameScreen(vm: GameViewModel, onBackToMenu: () -> Unit) {
                         .fillMaxWidth()
                         .padding(horizontal = 8.dp, vertical = 12.dp)
                 ) {
-                    Button(onClick = onBackToMenu, modifier = Modifier.align(Alignment.CenterStart)) { Text("Menu") }
-                    Text("Moves: ${state.playerMoves}", modifier = Modifier.align(Alignment.Center), fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                    Button(onClick = { vm.resetGame() }, modifier = Modifier.align(Alignment.CenterEnd)) { Text("Reset") }
+                    Button(
+                        onClick = onBackToMenu,
+                        modifier = Modifier.align(Alignment.CenterStart)
+                    ) { Text("Menu") }
+                    Text(
+                        "Moves: ${state.playerMoves}",
+                        modifier = Modifier.align(Alignment.Center),
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Button(
+                        onClick = { vm.resetGame() },
+                        modifier = Modifier.align(Alignment.CenterEnd)
+                    ) { Text("Reset") }
                 }
                 SwipeBoard(state, vm, modifier = Modifier.weight(1f))
             }
         }
     } else {
         Box(modifier = Modifier.fillMaxSize()) {
-            Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
                 Spacer(modifier = Modifier.height(64.dp))
-                Text("Moves: ${state.playerMoves}", modifier = Modifier.padding(vertical = 16.dp), fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    "Moves: ${state.playerMoves}",
+                    modifier = Modifier.padding(vertical = 16.dp),
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold
+                )
                 Spacer(modifier = Modifier.height(8.dp))
                 SwipeBoard(state, vm, modifier = Modifier.weight(1f))
                 Spacer(modifier = Modifier.height(8.dp))
-                Row(modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp), horizontalArrangement = Arrangement.Center) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 24.dp),
+                    horizontalArrangement = Arrangement.Center
+                ) {
                     Button(onClick = { vm.resetGame() }) { Text("Reset") }
                 }
             }
-            Button(onClick = onBackToMenu, modifier = Modifier.align(Alignment.TopStart).padding(8.dp)) { Text("Menu") }
+            Button(
+                onClick = onBackToMenu,
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(8.dp)
+            ) { Text("Menu") }
         }
     }
 }
@@ -127,6 +170,22 @@ internal fun SwipeBoard(state: GameState, vm: GameViewModel, modifier: Modifier 
 
 @Composable
 fun BoardView(state: GameState, modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+
+    // игрок: хранит направление и предыдущую позицию
+    val playerDirection = remember { mutableStateOf("right") }
+    var lastPlayerPos by remember { mutableStateOf(state.playerPos) }
+
+    // враги: направления и предыдущие позиции
+    val enemies = if (state.enemyPositions.isEmpty()) listOf(Pos(state.rows - 1, 0)) else state.enemyPositions
+    val enemyDirections = remember { mutableStateListOf<String>() }
+    val lastEnemyPositions = remember { mutableStateListOf<Pos>() }
+
+    LaunchedEffect(enemies.size) {
+        while (enemyDirections.size < enemies.size) enemyDirections.add("right")
+        while (lastEnemyPositions.size < enemies.size) lastEnemyPositions.add(Pos(0, 0))
+    }
+
     BoxWithConstraints(modifier = modifier, contentAlignment = Alignment.Center) {
         val boardSize = min(maxWidth, maxHeight)
         val cellSizeDp: Dp = boardSize / state.cols
@@ -136,26 +195,58 @@ fun BoardView(state: GameState, modifier: Modifier = Modifier) {
         val playerX by animateDpAsState(targetValue = cellSizeDp * state.playerPos.c)
         val playerY by animateDpAsState(targetValue = cellSizeDp * state.playerPos.r)
 
-        val enemies = if (state.enemyPositions.isEmpty()) listOf(Pos(state.rows - 1, 0)) else state.enemyPositions
+        // определяем направление игрока
+        LaunchedEffect(state.playerPos) {
+            playerDirection.value = if (state.playerPos.c >= lastPlayerPos.c) "right" else "left"
+            lastPlayerPos = state.playerPos
+        }
 
-        val enemyOffsets = enemies.map { pos ->
+        val enemyOffsets = enemies.mapIndexed { index, pos ->
             val x by animateDpAsState(targetValue = cellSizeDp * pos.c)
             val y by animateDpAsState(targetValue = cellSizeDp * pos.r)
+
+            LaunchedEffect(pos) {
+                if (index < lastEnemyPositions.size) {
+                    val lastPos = lastEnemyPositions[index]
+                    enemyDirections[index] = if (pos.c >= lastPos.c) "right" else "left"
+                    lastEnemyPositions[index] = pos
+                }
+            }
+
             x to y
         }
 
         Box(modifier = Modifier.size(boardSize)) {
+            // --- сетка и ловушки ---
             Column(modifier = Modifier.fillMaxSize()) {
                 for (r in 0 until state.rows) {
                     Row(modifier = Modifier.height(cellSizeDp)) {
                         for (c in 0 until state.cols) {
                             val pos = Pos(r, c)
                             val tile = state.tileAt(pos)!!
-                            val bg = when (tile.type) {
-                                TileType.TRAP -> Color(0xFF9C27B0)
-                                TileType.EXIT -> Color(0xFFFFEB3B)
-                                else -> Color(0xFFEEEEEE)
+                            val bg = Color(0xFFB3E5FC)
+
+                            val isTrapActive = tile.type == TileType.TRAP &&
+                                    state.enemyPositions.any { it.r == r && it.c == c }
+
+                            val alpha by animateFloatAsState(
+                                targetValue = if (isTrapActive) 0.7f else 0f,
+                                animationSpec = tween(durationMillis = 300)
+                            )
+
+                            // звук ловушки
+                            LaunchedEffect(isTrapActive) {
+                                if (isTrapActive) {
+                                    val mp = MediaPlayer()
+                                    val afd = context.resources.openRawResourceFd(R.raw.trap_sound)
+                                    mp.setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
+                                    afd.close()
+                                    mp.prepare()
+                                    mp.start()
+                                    mp.setOnCompletionListener { player -> player.release() }
+                                }
                             }
+
                             Box(
                                 modifier = Modifier
                                     .size(cellSizeDp)
@@ -164,9 +255,28 @@ fun BoardView(state: GameState, modifier: Modifier = Modifier) {
                                 contentAlignment = Alignment.Center
                             ) {
                                 when (tile.type) {
-                                    TileType.TRAP -> Text("T", fontSize = (cellSizeDp / 3).value.sp)
-                                    TileType.EXIT -> Text("EXIT", fontSize = (cellSizeDp / 6).value.sp)
-                                    else -> {}
+                                    TileType.TRAP -> {
+                                        Box(
+                                            modifier = Modifier
+                                                .matchParentSize()
+                                                .background(Color.Red.copy(alpha = alpha), RoundedCornerShape(6.dp))
+                                        )
+                                        Image(
+                                            painter = painterResource(id = R.drawable.trap),
+                                            contentDescription = "Trap",
+                                            modifier = Modifier.fillMaxSize(),
+                                            contentScale = ContentScale.Fit
+                                        )
+                                    }
+                                    TileType.EXIT -> {
+                                        Image(
+                                            painter = painterResource(id = R.drawable.exit3),
+                                            contentDescription = "Exit",
+                                            modifier = Modifier.fillMaxSize(),
+                                            contentScale = ContentScale.FillHeight
+                                        )
+                                    }
+                                    else -> { }
                                 }
                             }
                         }
@@ -174,6 +284,7 @@ fun BoardView(state: GameState, modifier: Modifier = Modifier) {
                 }
             }
 
+            // --- стены ---
             Canvas(modifier = Modifier.matchParentSize()) {
                 val stroke = (cellSizePx * 0.1f).coerceAtLeast(6f)
                 for ((a, b) in state.walls) {
@@ -191,26 +302,36 @@ fun BoardView(state: GameState, modifier: Modifier = Modifier) {
                 }
             }
 
+            // --- игрок и враги ---
             val paddingFactor = 0.07f
             val playerSize = cellSizeDp * (1f - paddingFactor)
-            val enemySize = cellSizeDp * (1f - paddingFactor)
+            val enemySize = cellSizeDp * (1.2f - paddingFactor)
+            val bottomOffset = 2.dp
 
-            Box(
+            val playerDrawable = if (playerDirection.value == "right") R.drawable.player_right else R.drawable.player_left
+            Image(
+                painter = painterResource(id = playerDrawable),
+                contentDescription = "Player",
                 modifier = Modifier
                     .offset(x = playerX + (cellSizeDp - playerSize) / 2, y = playerY + (cellSizeDp - playerSize) / 2)
-                    .size(playerSize)
-                    .background(Color(0xFF4CAF50), RoundedCornerShape(6.dp)),
-                contentAlignment = Alignment.Center
-            ) { Text("P", fontSize = (cellSizeDp / 3).value.sp, textAlign = TextAlign.Center) }
+                    .size(playerSize),
+                contentScale = ContentScale.FillHeight
+            )
 
-            enemyOffsets.forEach { (ex, ey) ->
-                Box(
+            enemyOffsets.forEachIndexed { index, (ex, ey) ->
+                val enemyDrawable = if (enemyDirections.getOrElse(index) { "right" } == "right")
+                    R.drawable.enemy_right else R.drawable.enemy_left
+                Image(
+                    painter = painterResource(id = enemyDrawable),
+                    contentDescription = "Enemy",
                     modifier = Modifier
-                        .offset(x = ex + (cellSizeDp - enemySize) / 2, y = ey + (cellSizeDp - enemySize) / 2)
-                        .size(enemySize)
-                        .background(Color(0xFFF44336), RoundedCornerShape(6.dp)),
-                    contentAlignment = Alignment.Center
-                ) { Text("E", fontSize = (cellSizeDp / 3).value.sp, textAlign = TextAlign.Center) }
+                        .offset(
+                            x = ex + (cellSizeDp - enemySize) / 2,
+                            y = ey + cellSizeDp - enemySize - bottomOffset // чуть выше нижней границы
+                        )
+                        .size(enemySize),
+                    contentScale = ContentScale.FillHeight
+                )
             }
         }
     }
