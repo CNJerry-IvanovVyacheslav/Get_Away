@@ -1,6 +1,5 @@
 package com.example.wappo_game.ui
 
-import android.content.Context
 import android.media.MediaPlayer
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -42,7 +41,7 @@ fun GameScreen(vm: GameViewModel, onBackToMenu: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF17A5EA)) // светло-голубой фон
+            .background(Color(0xFF17A5EA))
     )
 
     if (state.result is GameResult.PlayerWon || state.result is GameResult.PlayerLost) {
@@ -172,11 +171,9 @@ internal fun SwipeBoard(state: GameState, vm: GameViewModel, modifier: Modifier 
 fun BoardView(state: GameState, modifier: Modifier = Modifier) {
     val context = LocalContext.current
 
-    // игрок: хранит направление и предыдущую позицию
     val playerDirection = remember { mutableStateOf("right") }
     var lastPlayerPos by remember { mutableStateOf(state.playerPos) }
 
-    // враги: направления и предыдущие позиции
     val enemies = if (state.enemyPositions.isEmpty()) listOf(Pos(state.rows - 1, 0)) else state.enemyPositions
     val enemyDirections = remember { mutableStateListOf<String>() }
     val lastEnemyPositions = remember { mutableStateListOf<Pos>() }
@@ -195,7 +192,6 @@ fun BoardView(state: GameState, modifier: Modifier = Modifier) {
         val playerX by animateDpAsState(targetValue = cellSizeDp * state.playerPos.c)
         val playerY by animateDpAsState(targetValue = cellSizeDp * state.playerPos.r)
 
-        // определяем направление игрока
         LaunchedEffect(state.playerPos) {
             playerDirection.value = if (state.playerPos.c >= lastPlayerPos.c) "right" else "left"
             lastPlayerPos = state.playerPos
@@ -217,7 +213,6 @@ fun BoardView(state: GameState, modifier: Modifier = Modifier) {
         }
 
         Box(modifier = Modifier.size(boardSize)) {
-            // --- сетка и ловушки ---
             Column(modifier = Modifier.fillMaxSize()) {
                 for (r in 0 until state.rows) {
                     Row(modifier = Modifier.height(cellSizeDp)) {
@@ -234,7 +229,6 @@ fun BoardView(state: GameState, modifier: Modifier = Modifier) {
                                 animationSpec = tween(durationMillis = 300)
                             )
 
-                            // звук ловушки
                             LaunchedEffect(isTrapActive) {
                                 if (isTrapActive) {
                                     val mp = MediaPlayer()
@@ -284,7 +278,6 @@ fun BoardView(state: GameState, modifier: Modifier = Modifier) {
                 }
             }
 
-            // --- стены ---
             Canvas(modifier = Modifier.matchParentSize()) {
                 val stroke = (cellSizePx * 0.1f).coerceAtLeast(6f)
                 for ((a, b) in state.walls) {
@@ -302,7 +295,6 @@ fun BoardView(state: GameState, modifier: Modifier = Modifier) {
                 }
             }
 
-            // --- игрок и враги ---
             val paddingFactor = 0.07f
             val playerSize = cellSizeDp * (1f - paddingFactor)
             val enemySize = cellSizeDp * (1.2f - paddingFactor)
@@ -327,7 +319,7 @@ fun BoardView(state: GameState, modifier: Modifier = Modifier) {
                     modifier = Modifier
                         .offset(
                             x = ex + (cellSizeDp - enemySize) / 2,
-                            y = ey + cellSizeDp - enemySize - bottomOffset // чуть выше нижней границы
+                            y = ey + cellSizeDp - enemySize - bottomOffset
                         )
                         .size(enemySize),
                     contentScale = ContentScale.FillHeight

@@ -162,7 +162,7 @@ class GameViewModel(app: Application) : AndroidViewModel(app) {
                     enemyPositions[idx] = step
 
                     if (curState.tileAt(step)?.type == TileType.TRAP) {
-                        frozenTurns[idx] = 3
+                        frozenTurns[idx] = 4
                         stopped = true
                         return@forEach
                     }
