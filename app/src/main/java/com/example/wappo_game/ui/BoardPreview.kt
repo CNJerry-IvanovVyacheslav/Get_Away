@@ -2,20 +2,20 @@ package com.example.wappo_game.ui
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.example.wappo_game.R
 import com.example.wappo_game.domain.GameState
 import com.example.wappo_game.domain.Pos
 import com.example.wappo_game.domain.TileType
@@ -30,6 +30,10 @@ fun BoardPreview(state: GameState, sizeDp: Dp) {
             .testTag("BoardPreview")
     ) {
         val cellSize = sizeDp / state.cols
+        val paddingFactor = 0.1f
+        val playerSize = cellSize * (1f - paddingFactor)
+        val enemySize = cellSize * (1.1f - paddingFactor)
+        val bottomOffset = cellSize * 0.1f
 
         Box(modifier = Modifier.fillMaxSize()) {
             Column(modifier = Modifier.fillMaxSize()) {
@@ -40,41 +44,45 @@ fun BoardPreview(state: GameState, sizeDp: Dp) {
                             val tile = state.tileAt(pos)!!
                             val isPlayer = state.playerPos == pos
                             val isEnemy = state.enemyPositions.contains(pos)
-                            val bg = when {
-                                isPlayer -> Color(0xFF4CAF50)
-                                isEnemy -> Color(0xFFF44336)
-                                tile.type == TileType.TRAP -> Color(0xFF9C27B0)
-                                tile.type == TileType.EXIT -> Color(0xFFFFEB3B)
-                                else -> Color(0xFFEEEEEE)
-                            }
 
                             Box(
                                 modifier = Modifier
                                     .size(cellSize)
                                     .padding(1.dp)
-                                    .background(bg, RoundedCornerShape(4.dp)),
+                                    .background(Color(0xFFB3E5FC), RoundedCornerShape(4.dp)),
                                 contentAlignment = Alignment.Center
                             ) {
                                 when {
-                                    isPlayer -> Text(
-                                        "P",
-                                        fontSize = (cellSize / 3).value.sp,
-                                        textAlign = TextAlign.Center
-                                    )
-                                    isEnemy -> Text(
-                                        "E",
-                                        fontSize = (cellSize / 3).value.sp,
-                                        textAlign = TextAlign.Center
-                                    )
-                                    tile.type == TileType.TRAP -> Text(
-                                        "T",
-                                        fontSize = (cellSize / 3).value.sp
-                                    )
-                                    tile.type == TileType.EXIT -> Text(
-                                        "EXIT",
-                                        fontSize = (cellSize / 6).value.sp
-                                    )
-                                    else -> {}
+                                    isPlayer -> {
+                                        Image(
+                                            painter = painterResource(id = R.drawable.player_right),
+                                            contentDescription = "Player",
+                                            modifier = Modifier.size(playerSize)
+                                        )
+                                    }
+                                    isEnemy -> {
+                                        Image(
+                                            painter = painterResource(id = R.drawable.enemy_right),
+                                            contentDescription = "Enemy",
+                                            modifier = Modifier
+                                                .offset(y = bottomOffset * -1)
+                                                .size(enemySize)
+                                        )
+                                    }
+                                    tile.type == TileType.TRAP -> {
+                                        Image(
+                                            painter = painterResource(id = R.drawable.trap),
+                                            contentDescription = "Trap",
+                                            modifier = Modifier.size(cellSize * 0.9f)
+                                        )
+                                    }
+                                    tile.type == TileType.EXIT -> {
+                                        Image(
+                                            painter = painterResource(id = R.drawable.exit3),
+                                            contentDescription = "Exit",
+                                            modifier = Modifier.size(cellSize * 0.9f)
+                                        )
+                                    }
                                 }
                             }
                         }

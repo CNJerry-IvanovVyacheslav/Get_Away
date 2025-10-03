@@ -39,8 +39,9 @@ fun MenuScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = "Wappo-like Game",
+                    text = "Get Away",
                     fontSize = 36.sp,
                     fontWeight = FontWeight.ExtraBold
                 )
@@ -75,8 +76,9 @@ fun MenuScreen(
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Spacer(modifier = Modifier.height(16.dp))
             Text(
-                text = "Wappo-like Game",
+                text = "Get Away",
                 fontSize = 36.sp,
                 fontWeight = FontWeight.ExtraBold
             )
