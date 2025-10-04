@@ -11,7 +11,7 @@ You play as a human trapped on a spaceship with a **xenomorph**. You cannot figh
 - Reach the glowing **exit** to win.
 - Campaign with **25 handcrafted levels + Map Editor** for full customization.
 
-<img src="https://github.com/CNJerry-IvanovVyacheslav/Wappo_game/blob/master/photo_2025-10-04_16-16-29.jpg" width="200"> <img src="https://github.com/CNJerry-IvanovVyacheslav/Wappo_game/blob/master/video_2025-10-04_16-18-46.gif" width="200">
+<img src="https://github.com/CNJerry-IvanovVyacheslav/Wappo_game/blob/master/photo_2025-10-04_16-16-29.jpg" width="200"> <img src="https://github.com/CNJerry-IvanovVyacheslav/Wappo_game/blob/master/video_2025-10-04_16-18-46(1).gif" width="200">
 
 ## **✨ Features**
 - **Pixel Art Graphics**: custom sprites for player, alien, traps, and exit.  
