@@ -13,7 +13,7 @@ You play as a human trapped on a spaceship with a **xenomorph**. You cannot figh
 - Reach the glowing **exit** to win.
 - Campaign with **25 handcrafted levels + Map Editor** for full customization.
 
-<img src="https://github.com/CNJerry-IvanovVyacheslav/Wappo_game/blob/master/photo_2025-10-04_16-16-29.jpg" width="200"> <img src="https://github.com/CNJerry-IvanovVyacheslav/Wappo_game/blob/master/video_2025-10-04_16-18-46(1).gif" width="200">
+<img src="https://github.com/CNJerry-IvanovVyacheslav/Get_Away/blob/7115a290214c19b83385e379ae6d7a0ace1ea20a/screenshots/photo_2025-10-04_16-16-29.jpg" width="200"> <img src="https://github.com/CNJerry-IvanovVyacheslav/Get_Away/blob/7115a290214c19b83385e379ae6d7a0ace1ea20a/screenshots/video_2025-10-04_16-18-46(1).gif" width="200">
 
 ## **✨ Features**
 - **Pixel Art Graphics**: custom sprites for player, alien, traps, and exit.  
@@ -34,7 +34,7 @@ You play as a human trapped on a spaceship with a **xenomorph**. You cannot figh
 - **Responsive UI**: scales seamlessly across devices.  
 - **Map Preview in Menu**: see mini-versions of campaign or custom maps before playing.
 
-<img src="https://github.com/CNJerry-IvanovVyacheslav/Wappo_game/blob/master/photo_2025-10-04_16-16-29 (4).jpg" width="200"> <img src="https://github.com/CNJerry-IvanovVyacheslav/Wappo_game/blob/master/photo_2025-10-04_16-16-29 (5).jpg" width="200"> <img src="https://github.com/CNJerry-IvanovVyacheslav/Wappo_game/blob/master/video_2025-10-04_16-18-03.gif" width="200">
+<img src="https://github.com/CNJerry-IvanovVyacheslav/Get_Away/blob/7115a290214c19b83385e379ae6d7a0ace1ea20a/screenshots/photo_2025-10-04_16-16-29%20(4).jpg" width="200"> <img src="https://github.com/CNJerry-IvanovVyacheslav/Get_Away/blob/7115a290214c19b83385e379ae6d7a0ace1ea20a/screenshots/photo_2025-10-04_16-16-29%20(5).jpg" width="200"> <img src="https://github.com/CNJerry-IvanovVyacheslav/Get_Away/blob/7115a290214c19b83385e379ae6d7a0ace1ea20a/screenshots/video_2025-10-04_16-18-03.gif" width="200">
 
 
 ## **🛠️ Technologies & Libraries**
@@ -63,6 +63,6 @@ You play as a human trapped on a spaceship with a **xenomorph**. You cannot figh
 5. Optionally, open the **Editor** to create and save your own levels.
 6. Preview your custom map in the menu before starting a game.
 
-<img src="https://github.com/CNJerry-IvanovVyacheslav/Wappo_game/blob/master/video_2025-10-04_16-35-35.gif" width="200">
+<img src="https://github.com/CNJerry-IvanovVyacheslav/Get_Away/blob/7115a290214c19b83385e379ae6d7a0ace1ea20a/screenshots/video_2025-10-04_16-35-35.gif" width="200">
 
 *(The game is inspired by the "Wappo Game" and is made solely to explore a technology that is new to me)*
