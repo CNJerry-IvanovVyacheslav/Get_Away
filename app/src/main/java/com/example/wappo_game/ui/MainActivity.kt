@@ -48,10 +48,10 @@ fun AppNavHost(gameViewModel: GameViewModel) {
             MenuScreen(
                 vm = gameViewModel,
                 onPlayClick = {
-                    val lastIndex = gameViewModel.unlockedLevels.value - 1
-                    val level = LevelRepository.levels.getOrNull(lastIndex) ?: LevelRepository.levels.first()
-                    gameViewModel.loadCustomMap(level)
-                    navController.navigate("game")
+                    lastMap?.let { levelToPlay ->
+                        gameViewModel.loadCustomMap(levelToPlay)
+                        navController.navigate("game")
+                    }
                 },
                 onCampaignClick = {
                     navController.navigate("campaign_select")
