@@ -174,7 +174,8 @@ fun BoardView(state: GameState, modifier: Modifier = Modifier) {
     val playerDirection = remember { mutableStateOf("right") }
     var lastPlayerPos by remember { mutableStateOf(state.playerPos) }
 
-    val enemies = if (state.enemyPositions.isEmpty()) listOf(Pos(state.rows - 1, 0)) else state.enemyPositions
+    val enemies =
+        if (state.enemyPositions.isEmpty()) listOf(Pos(state.rows - 1, 0)) else state.enemyPositions
     val enemyDirections = remember { mutableStateListOf<String>() }
     val lastEnemyPositions = remember { mutableStateListOf<Pos>() }
 
@@ -233,7 +234,11 @@ fun BoardView(state: GameState, modifier: Modifier = Modifier) {
                                 if (isTrapActive) {
                                     val mp = MediaPlayer()
                                     val afd = context.resources.openRawResourceFd(R.raw.trap_sound)
-                                    mp.setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
+                                    mp.setDataSource(
+                                        afd.fileDescriptor,
+                                        afd.startOffset,
+                                        afd.length
+                                    )
                                     afd.close()
                                     mp.prepare()
                                     mp.start()
@@ -253,7 +258,10 @@ fun BoardView(state: GameState, modifier: Modifier = Modifier) {
                                         Box(
                                             modifier = Modifier
                                                 .matchParentSize()
-                                                .background(Color.Red.copy(alpha = alpha), RoundedCornerShape(6.dp))
+                                                .background(
+                                                    Color.Red.copy(alpha = alpha),
+                                                    RoundedCornerShape(6.dp)
+                                                )
                                         )
                                         Image(
                                             painter = painterResource(id = R.drawable.trap),
@@ -262,6 +270,7 @@ fun BoardView(state: GameState, modifier: Modifier = Modifier) {
                                             contentScale = ContentScale.Fit
                                         )
                                     }
+
                                     TileType.EXIT -> {
                                         Image(
                                             painter = painterResource(id = R.drawable.exit3),
@@ -270,7 +279,8 @@ fun BoardView(state: GameState, modifier: Modifier = Modifier) {
                                             contentScale = ContentScale.FillHeight
                                         )
                                     }
-                                    else -> { }
+
+                                    else -> {}
                                 }
                             }
                         }
@@ -285,12 +295,22 @@ fun BoardView(state: GameState, modifier: Modifier = Modifier) {
                         val rowTop = a.r * cellSizePx
                         val rowBottom = rowTop + cellSizePx
                         val dividerX = maxOf(a.c, b.c) * cellSizePx
-                        drawLine(Color.Black, start = Offset(dividerX, rowTop), end = Offset(dividerX, rowBottom), strokeWidth = stroke)
+                        drawLine(
+                            Color.Black,
+                            start = Offset(dividerX, rowTop),
+                            end = Offset(dividerX, rowBottom),
+                            strokeWidth = stroke
+                        )
                     } else if (a.c == b.c && abs(a.r - b.r) == 1) {
                         val colLeft = a.c * cellSizePx
                         val colRight = colLeft + cellSizePx
                         val dividerY = maxOf(a.r, b.r) * cellSizePx
-                        drawLine(Color.Black, start = Offset(colLeft, dividerY), end = Offset(colRight, dividerY), strokeWidth = stroke)
+                        drawLine(
+                            Color.Black,
+                            start = Offset(colLeft, dividerY),
+                            end = Offset(colRight, dividerY),
+                            strokeWidth = stroke
+                        )
                     }
                 }
             }
@@ -300,12 +320,16 @@ fun BoardView(state: GameState, modifier: Modifier = Modifier) {
             val enemySize = cellSizeDp * (1.2f - paddingFactor)
             val bottomOffset = 2.dp
 
-            val playerDrawable = if (playerDirection.value == "right") R.drawable.player_right else R.drawable.player_left
+            val playerDrawable =
+                if (playerDirection.value == "right") R.drawable.player_right else R.drawable.player_left
             Image(
                 painter = painterResource(id = playerDrawable),
                 contentDescription = "Player",
                 modifier = Modifier
-                    .offset(x = playerX + (cellSizeDp - playerSize) / 2, y = playerY + (cellSizeDp - playerSize) / 2)
+                    .offset(
+                        x = playerX + (cellSizeDp - playerSize) / 2,
+                        y = playerY + (cellSizeDp - playerSize) / 2
+                    )
                     .size(playerSize),
                 contentScale = ContentScale.FillHeight
             )

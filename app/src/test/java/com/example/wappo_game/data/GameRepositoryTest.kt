@@ -1,7 +1,7 @@
 package com.example.wappo_game.data
 
 import com.example.wappo_game.domain.GameState
-import com.example.wappo_game.domain.createDefaultGameState
+import com.example.wappo_game.domain.createLevel
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -15,7 +15,7 @@ class GameRepositoryTest {
 
     @Before
     fun setup() {
-        initialState = createDefaultGameState()
+        initialState = createLevel(name = "Test Level")
         repository = InMemoryGameRepository(initialState)
     }
 

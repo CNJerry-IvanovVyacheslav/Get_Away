@@ -196,10 +196,30 @@ fun EditorScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Button(onClick = { mode = EditorMode.TILES }) { Text("Tiles", fontSize = 12.sp) }
-                    Button(onClick = { mode = EditorMode.WALLS }) { Text("Walls", fontSize = 12.sp) }
-                    Button(onClick = { mode = EditorMode.PLAYER_START }) { Text("Set Player", fontSize = 11.sp) }
-                    Button(onClick = { mode = EditorMode.ENEMY_START }) { Text("Set Enemy", fontSize = 10.sp) }
+                    Button(onClick = { mode = EditorMode.TILES }) {
+                        Text(
+                            "Tiles",
+                            fontSize = 12.sp
+                        )
+                    }
+                    Button(onClick = { mode = EditorMode.WALLS }) {
+                        Text(
+                            "Walls",
+                            fontSize = 12.sp
+                        )
+                    }
+                    Button(onClick = { mode = EditorMode.PLAYER_START }) {
+                        Text(
+                            "Set Player",
+                            fontSize = 11.sp
+                        )
+                    }
+                    Button(onClick = { mode = EditorMode.ENEMY_START }) {
+                        Text(
+                            "Set Enemy",
+                            fontSize = 10.sp
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.weight(1f))

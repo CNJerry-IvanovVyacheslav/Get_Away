@@ -60,6 +60,7 @@ fun BoardPreview(state: GameState, sizeDp: Dp) {
                                             modifier = Modifier.size(playerSize)
                                         )
                                     }
+
                                     isEnemy -> {
                                         Image(
                                             painter = painterResource(id = R.drawable.enemy_right),
@@ -69,6 +70,7 @@ fun BoardPreview(state: GameState, sizeDp: Dp) {
                                                 .size(enemySize)
                                         )
                                     }
+
                                     tile.type == TileType.TRAP -> {
                                         Image(
                                             painter = painterResource(id = R.drawable.trap),
@@ -76,6 +78,7 @@ fun BoardPreview(state: GameState, sizeDp: Dp) {
                                             modifier = Modifier.size(cellSize * 0.9f)
                                         )
                                     }
+
                                     tile.type == TileType.EXIT -> {
                                         Image(
                                             painter = painterResource(id = R.drawable.exit3),
