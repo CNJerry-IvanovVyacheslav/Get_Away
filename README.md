@@ -3,7 +3,7 @@
 A retro-inspired puzzle game built entirely with **Kotlin** and **Jetpack Compose**.
 You play as a human trapped on a spaceship with a **xenomorph**. You cannot fight back — the only way to survive is to **run smartly**, using **walls and traps** to outwit the alien and reach the exit.
 
-### You can try the game [here](https://github.com/CNJerry-IvanovVyacheslav/Wappo_game/releases)
+### You can try the game [here](https://github.com/CNJerry-IvanovVyacheslav/Get_Away/releases)
 
 ## **🎮 Gameplay**
 
