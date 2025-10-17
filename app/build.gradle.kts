@@ -45,6 +45,8 @@ android {
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes += "META-INF/LICENSE.md"
+            excludes += "META-INF/LICENSE-notice.md"
         }
     }
 }
@@ -85,4 +87,5 @@ dependencies {
     androidTestImplementation("com.google.truth:truth:1.1.5")
     androidTestImplementation("org.mockito.kotlin:mockito-kotlin:5.4.0")
     androidTestImplementation("org.mockito:mockito-inline:5.2.0")
+    androidTestImplementation("io.mockk:mockk-android:1.13.6")
 }

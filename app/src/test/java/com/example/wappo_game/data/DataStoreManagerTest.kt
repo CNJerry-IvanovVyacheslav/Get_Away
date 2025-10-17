@@ -11,6 +11,8 @@ import java.io.File
 import java.util.UUID
 import com.example.wappo_game.domain.*
 import com.google.common.truth.Truth.assertThat
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class DataStoreManagerTest {
@@ -22,7 +24,7 @@ class DataStoreManagerTest {
     fun setUp() {
         tempFile = File.createTempFile("test_prefs_${UUID.randomUUID()}", ".preferences_pb")
         val dataStore = PreferenceDataStoreFactory.create(
-            scope = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO),
+            scope = CoroutineScope(Dispatchers.IO),
             produceFile = { tempFile }
         )
         manager = DataStoreManager(dataStore)
@@ -33,11 +35,10 @@ class DataStoreManagerTest {
         tempFile.delete()
     }
 
-    private fun fakeGameState(name: String) = GameState(
-        tiles = listOf(Tile(Pos(0, 0), TileType.EMPTY)),
+    private fun fakeGameState(name: String) = createLevel(
+        name = name,
         playerPos = Pos(0, 0),
-        enemyPos = Pos(0, 1),
-        name = name
+        enemyPositions = listOf(Pos(0, 1))
     )
 
     @Test
@@ -95,5 +96,12 @@ class DataStoreManagerTest {
         manager.saveLastMapName("LastMap")
         val name = manager.loadLastMapName().first()
         assertThat(name).isEqualTo("LastMap")
+    }
+
+    @Test
+    fun saveAndLoadUnlockedLevels() = runTest {
+        manager.saveUnlockedLevels(5)
+        val count = manager.loadUnlockedLevels().first()
+        assertThat(count).isEqualTo(5)
     }
 }

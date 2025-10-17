@@ -48,7 +48,8 @@ class GameViewModel(app: Application) : AndroidViewModel(app) {
                 else -> _unlockedLevels.value - 1
             }
 
-            val chosenMap = LevelRepository.levels.getOrNull(chosenIndex) ?: LevelRepository.levels.first()
+            val chosenMap =
+                LevelRepository.levels.getOrNull(chosenIndex) ?: LevelRepository.levels.first()
             currentMap = chosenMap
             loadCustomMap(chosenMap, saveLast = false)
             _lastMapState.value = chosenMap

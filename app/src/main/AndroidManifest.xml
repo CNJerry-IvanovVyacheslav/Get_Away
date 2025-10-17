@@ -24,7 +24,7 @@
         </activity>
         <activity
             android:name=".presentation.TestActivity"
-            android:exported="true"/>
+            android:exported="true" />
     </application>
 
 </manifest>

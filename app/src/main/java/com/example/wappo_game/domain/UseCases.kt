@@ -29,7 +29,11 @@ fun stepTowardPlayerWithPriority(state: GameState, from: Pos): Pos {
         else -> null
     }
 
-    if (horizStep != null && state.inBounds(horizStep) && !state.isBlocked(from, horizStep)) return horizStep
+    if (horizStep != null && state.inBounds(horizStep) && !state.isBlocked(
+            from,
+            horizStep
+        )
+    ) return horizStep
 
     val vertStep = when {
         player.r < from.r -> Pos(from.r - 1, from.c)
@@ -37,7 +41,11 @@ fun stepTowardPlayerWithPriority(state: GameState, from: Pos): Pos {
         else -> null
     }
 
-    if (vertStep != null && state.inBounds(vertStep) && !state.isBlocked(from, vertStep)) return vertStep
+    if (vertStep != null && state.inBounds(vertStep) && !state.isBlocked(
+            from,
+            vertStep
+        )
+    ) return vertStep
 
     return from
 }
@@ -50,8 +58,15 @@ fun enemyPaths(state: GameState): List<List<Pos>> {
             val steps = mutableListOf<Pos>()
             var cur = pos
             repeat(2) {
-                val next = stepTowardPlayerWithPriority(state.copy(enemyPositions = state.enemyPositions), cur)
-                if (next == cur || !state.inBounds(next) || state.isBlocked(cur, next)) return@repeat
+                val next = stepTowardPlayerWithPriority(
+                    state.copy(enemyPositions = state.enemyPositions),
+                    cur
+                )
+                if (next == cur || !state.inBounds(next) || state.isBlocked(
+                        cur,
+                        next
+                    )
+                ) return@repeat
                 steps.add(next)
                 cur = next
             }

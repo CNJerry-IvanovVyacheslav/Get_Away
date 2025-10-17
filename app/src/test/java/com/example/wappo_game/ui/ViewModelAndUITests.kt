@@ -1,12 +1,17 @@
-package com.example.wappo_game.presentation
+package com.example.wappo_game.ui
 
 import com.example.wappo_game.data.InMemoryGameRepository
-import com.example.wappo_game.domain.*
+import com.example.wappo_game.domain.GameResult
+import com.example.wappo_game.domain.GameState
+import com.example.wappo_game.domain.Pos
+import com.example.wappo_game.domain.TileType
+import com.example.wappo_game.domain.createLevel
+import com.example.wappo_game.domain.movePlayer
 import com.google.common.truth.Truth.assertThat
-import org.junit.Before
-import org.junit.Test
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import org.junit.Before
+import org.junit.Test
 
 class ViewModelAndUITests {
 
@@ -124,6 +129,14 @@ class ViewModelAndUITests {
         assertThat(viewModel.savedMaps.value.any { it.name == "MapToDelete" }).isFalse()
     }
 
+    @Test
+    fun `clear all maps removes all maps`() {
+        viewModel.saveCustomMap(createLevel(name = "Map1"))
+        viewModel.saveCustomMap(createLevel(name = "Map2"))
+        viewModel.clearAllMaps()
+        assertThat(viewModel.savedMaps.value).isEmpty()
+    }
+
     private fun nextType(type: TileType) = when (type) {
         TileType.EMPTY -> TileType.TRAP
         TileType.TRAP -> TileType.EXIT
@@ -131,7 +144,7 @@ class ViewModelAndUITests {
     }
 
     @Test
-    fun `nextType cycles correctly`() {
+    fun `nextType cycles correctly for editor`() {
         assertThat(nextType(TileType.EMPTY)).isEqualTo(TileType.TRAP)
         assertThat(nextType(TileType.TRAP)).isEqualTo(TileType.EXIT)
         assertThat(nextType(TileType.EXIT)).isEqualTo(TileType.EMPTY)
